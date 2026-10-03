@@ -6,7 +6,7 @@ import { cardElement } from '../shared/card.ts';
 import type { AlbumOut, Catalogue } from '../shared/types.ts';
 
 const cat = {
-  generated: '', graphName: 'music', warnings: [],
+  generated: '', warnings: [],
   kingdoms: kingdoms.kingdoms, rarity: rarity.tiers, starPath: rarity.starPath, starViewBox: rarity.starViewBox,
   packs: [{ week: '2026-W40', made: '2026-09-28', note: null, albums: ['x', 'sealed', 'y', 'z'] }],
   albums: [],
@@ -14,11 +14,11 @@ const cat = {
 
 const album = (o: Omit<Partial<AlbumOut>, 'art'> & { s?: number[]; img?: string }): AlbumOut => ({
   id: o.id ?? 'a', no: o.no ?? '001', title: o.title ?? '', artist: o.artist ?? '', year: o.year ?? 2000,
-  spotify: null, runtime: null, kingdom: o.kingdom ?? 'rock', added: '2026-10-02', first: o.first ?? null, pack: o.pack ?? null,
+  spotify: null, runtime: null, kingdom: o.kingdom ?? 'rock', also: [], added: '2026-10-02', first: o.first ?? null, pack: o.pack ?? null,
   state: o.state ?? 'open', rating: o.rating ?? null, rarity: o.rarity ?? null,
   stats: { replay: o.s?.[0] ?? null, sonic: o.s?.[1] ?? null, meaning: o.s?.[2] ?? null, influence: o.s?.[3] ?? null },
   art: { cover: o.img ? `placeholder-art/${o.img}` : null, pixel: o.img ? `placeholder-art/${o.img}` : null, abstract: o.img ? `placeholder-art/${o.img}` : null, palette: [] },
-  excerpt: o.excerpt ?? '', logseq: { page: '', url: '' }, person: {} as AlbumOut['person'],
+  excerpt: o.excerpt ?? '', track: null, logseq: { page: '' },
 });
 
 const promises = album({ title: 'Promises', artist: 'Floating Points, Pharoah Sanders', year: 2021, no: '004', kingdom: 'electronic', first: '2021-04-02', rarity: 'divine', s: [5, 5, 5, 4], img: 'art2.png' });

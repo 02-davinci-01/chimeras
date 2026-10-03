@@ -12,6 +12,8 @@ const BARCODE = '<svg width="23" height="12" viewBox="0 0 23 12" aria-hidden="tr
 const SCREW = (pos: string) => `<svg class="screw ${pos}" viewBox="0 0 7 7" aria-hidden="true"><circle cx="3.5" cy="3.5" r="3" fill="none" stroke="#CFCFCB"/><line x1="1.8" y1="3.5" x2="5.2" y2="3.5" stroke="#CFCFCB"/></svg>`;
 const SCREWS = ['tl', 'tr', 'bl', 'br'].map(SCREW).join('');
 const RIDGE = '<div class="ridge"><svg viewBox="0 0 188 20" preserveAspectRatio="none" aria-hidden="true"><path d="M14 20 L24 2 H164 L174 20" fill="none" stroke="#E0E0DC"/><circle cx="52" cy="12" r="3.5" fill="none" stroke="#D9D9D5"/><circle cx="136" cy="12" r="3.5" fill="none" stroke="#D9D9D5"/><rect x="84" y="8" width="7" height="7" fill="none" stroke="#D9D9D5"/><rect x="97" y="8" width="7" height="7" fill="none" stroke="#D9D9D5"/></svg></div>';
+/** Shown wherever the full review would be: reviews live only in Vedant's Logseq graph. */
+export const PRIVATE_REVIEW = 'reviews stay local at my logseq for they are personal :p';
 const LINK = '<button class="review-link" type="button" data-action="read">Read the full review</button>';
 
 /** Hover explanations (data-tip) for the card's small marks. */
@@ -74,18 +76,18 @@ export function faceHTML(a: AlbumOut, face: Face, ctx: CardContext): string {
     a.first ? tip('First listened', longDate(a.first)) : '',
     tip(`${k.name} · card ${a.no}`, `Card ${Number(a.no)} of ${cat.albums.length || '?'} in the catalogue.`));
   if (face === 'back') {
-    const img = a.art.abstract ? `<img src="${base}/${a.art.abstract}" alt="Abstract art of ${esc(a.title)}">` : '';
-    const text = a.excerpt ? esc(a.excerpt) : 'Nothing written yet. The review lives on the Logseq page.';
+    const img = a.art.abstract ? `<img src="${base}/${a.art.abstract}" alt="Abstract art of ${esc(a.title)}" loading="lazy" decoding="async">` : '';
+    const text = esc(PRIVATE_REVIEW);
     return strip
       + `\n<div class="body">${SCREWS}<div class="art${img ? '' : ' blank'}">${img}<div class="side"${tip('Side B · abstract', `The cover's own colours, ${MARK_NOTES[k.mark] ?? 'redrawn'}: the ${k.name.toLowerCase()} mark.`)}>B</div></div>\n`
-      + `<p class="excerpt${a.excerpt ? '' : ' empty'}" style="margin:2px 0 0">${text}</p>\n${LINK}${RIDGE}</div>`;
+      + `<p class="excerpt private" style="margin:2px 0 0">${text}</p>\n${LINK}${RIDGE}</div>`;
   }
 
   const tier = cat.rarity.find(t => t.key === a.rarity);
-  const tierTip = tier ? tip(`${tier.name}${a.rating != null ? ` · ${a.rating}/10` : ''}`, `${TIER_NOTES[tier.key] ?? ''}${a.rating != null && a.rarity && tier.rule.minRating > a.rating ? ' Set by hand on the Logseq page.' : ''}`) : '';
+  const tierTip = tier ? tip(`${tier.name}${a.rating != null ? ` · ${a.rating}/10` : ''}`, `${TIER_NOTES[tier.key] ?? ''}${a.rating != null && a.rarity && tier.rule.minRating > a.rating ? ' Set by hand.' : ''}`) : '';
   const badge = tier ? `<div class="rarity-badge"${tierTip}><svg class="sym" width="15" height="15" viewBox="-1 -1 26 26" aria-label="${tier.name}"><path d="${tier.symbol}"/></svg></div>` : '';
   const front = a.art.cover ?? a.art.pixel;
-  const img = front ? `<img${a.art.cover ? ' class="cover"' : ''} src="${base}/${front}" alt="Cover of ${esc(a.title)}">` : '';
+  const img = front ? `<img${a.art.cover ? ' class="cover"' : ''} src="${base}/${front}" alt="Cover of ${esc(a.title)}" decoding="async">` : '';
   const statRows = STAT_KEYS.map(s => `<div class="stat"${tip(`${s[0].toUpperCase() + s.slice(1)}${a.stats[s] != null ? ` · ${a.stats[s]} of 5` : ''}`, STAT_NOTES[s][0].toUpperCase() + STAT_NOTES[s].slice(1) + '.')}><span>${s[0].toUpperCase() + s.slice(1)}</span><div class="stars">${stars(a.stats[s], cat.starPath, cat.starViewBox)}</div></div>`).join('');
   return strip
     + `\n<div class="body">${SCREWS}<div class="art${img ? '' : ' blank'}">${img}<div class="side"${tip('Side A · the cover')}>A</div>${badge}</div>\n`

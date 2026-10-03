@@ -57,6 +57,27 @@
         "indie"
       ]
     },
+    "also": {
+      "type": "array",
+      "uniqueItems": true,
+      "maxItems": 3,
+      "items": {
+        "enum": [
+          "rock",
+          "electronic",
+          "hiphop",
+          "indie"
+        ]
+      },
+      "description": "Other kingdoms the album also belongs to. Each one draws a thread from the card into that kingdom in the world. Never includes its own kingdom."
+    },
+    "track": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Track the world plays when you meet the card, by name as it appears on the album. The build fetches a 30-second preview of it."
+    },
     "logseq": {
       "type": "object",
       "required": [
@@ -90,93 +111,6 @@
       ],
       "pattern": "^\\d{4}-W\\d{2}$",
       "description": "ISO week of the pack it came in, if any."
-    },
-    "person": {
-      "$ref": "#/$defs/person"
-    }
-  },
-  "$defs": {
-    "person": {
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "brief": {
-          "type": "string",
-          "description": "Vedant's own words, verbatim. Source of truth for the person."
-        },
-        "base": {
-          "enum": [
-            "rock",
-            "electronic",
-            "hiphop",
-            "indie"
-          ],
-          "description": "Defaults to the album's kingdom."
-        },
-        "build": {
-          "type": "object",
-          "properties": {
-            "height": {
-              "type": "number",
-              "minimum": 0.6,
-              "maximum": 1.8,
-              "default": 1
-            },
-            "mass": {
-              "type": "number",
-              "minimum": 0.5,
-              "maximum": 1.8,
-              "default": 1
-            }
-          },
-          "additionalProperties": false
-        },
-        "head": {
-          "type": "string",
-          "description": "Head module name: default, static, faceless, cover, skull, cube."
-        },
-        "traits": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          },
-          "description": "Trait module names, applied in order."
-        },
-        "motion": {
-          "type": "object",
-          "properties": {
-            "gait": {
-              "enum": [
-                "walk",
-                "shuffle",
-                "stride",
-                "drift",
-                "hop",
-                "still"
-              ]
-            },
-            "tempo": {
-              "type": "number",
-              "default": 1
-            },
-            "bpm": {
-              "type": [
-                "number",
-                "null"
-              ]
-            }
-          },
-          "additionalProperties": false
-        },
-        "colours": {
-          "type": "object",
-          "description": "Values are palette:N (index into the cover's 8-colour palette, by share) or a hex.",
-          "additionalProperties": {
-            "type": "string",
-            "pattern": "^(palette:[0-7]|#[0-9A-Fa-f]{6})$"
-          }
-        }
-      }
     }
   }
 }

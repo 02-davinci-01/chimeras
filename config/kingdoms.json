@@ -1,5 +1,5 @@
 {
-  "$comment": "Order is display order. colour = border + obi strip; ink = text on the strip; mark = abstract-art style; body = base body plan in the world; tags only suggest a kingdom, the album's own `kingdom` field decides.",
+  "$comment": "Order is display order. colour = border + obi strip; ink = text on the strip; mark = abstract-art style; In the world each kingdom is a nebula of its colour; tags only suggest a kingdom, the album's own `kingdom` field decides.",
   "kingdoms": [
     {
       "key": "rock",
@@ -7,7 +7,6 @@
       "colour": "#2D4B8E",
       "ink": "#FFFFFF",
       "mark": "smear",
-      "body": "rock",
       "tags": [
         "rock",
         "art rock",
@@ -27,7 +26,6 @@
       "colour": "#8C8F94",
       "ink": "#141516",
       "mark": "grid",
-      "body": "electronic",
       "tags": [
         "electronic",
         "idm",
@@ -49,7 +47,6 @@
       "colour": "#C62F2B",
       "ink": "#FFFFFF",
       "mark": "halftone",
-      "body": "hiphop",
       "tags": [
         "hip hop",
         "rap",
@@ -64,7 +61,6 @@
       "colour": "#F0CF3A",
       "ink": "#1E1A05",
       "mark": "strings",
-      "body": "indie",
       "tags": [
         "indie",
         "indie rock",

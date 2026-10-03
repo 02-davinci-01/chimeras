@@ -6,15 +6,14 @@
   "spotify": "6GjwtEZcfenmOf6l18N7T7",
   "cover": "https://i.scdn.co/image/ab67616d0000b2736c7112082b63beefffe40151",
   "kingdom": "rock",
+  "also": [
+    "electronic"
+  ],
+  "track": "Everything In Its Right Place",
   "logseq": {
     "page": "Kid A"
   },
   "added": "2026-10-03",
   "first": "2023-01-21",
-  "pack": null,
-  "person": {
-    "brief": "",
-    "base": "rock",
-    "traits": []
-  }
+  "pack": null
 }

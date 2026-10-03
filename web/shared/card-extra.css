@@ -4,7 +4,7 @@
 /* Long titles wrap into a second column early, so the pen date and the foot keep their room. */
 .obi-title.long{max-height:150px}
 .obi-title.longer{max-height:150px;font-size:15px}
-.excerpt.empty{color:var(--muted);font-style:italic}
+.excerpt.empty,.excerpt.private{color:var(--muted);font-style:italic}
 
 /* Card motion: quiet lift and a soft halo in the kingdom colour. */
 .card{transition:transform .35s cubic-bezier(.2,.7,.2,1),box-shadow .35s cubic-bezier(.2,.7,.2,1),opacity .3s ease}

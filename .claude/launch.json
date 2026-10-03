@@ -4,8 +4,55 @@
     {
       "name": "catalogue",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "dev", "--", "--no-open"],
+      "runtimeArgs": [
+        "run",
+        "dev",
+        "--",
+        "--no-open"
+      ],
       "port": 5180
+    },
+    {
+      "name": "catalogue-5181",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "dev",
+        "--",
+        "--no-open"
+      ],
+      "env": {
+        "CATALOGUE_PORT": "5181"
+      },
+      "port": 5181
+    },
+    {
+      "name": "catalogue-5182",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "dev",
+        "--",
+        "--no-open"
+      ],
+      "env": {
+        "CATALOGUE_PORT": "5182"
+      },
+      "port": 5182
+    },
+    {
+      "name": "catalogue-5183",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "dev",
+        "--",
+        "--no-open"
+      ],
+      "env": {
+        "CATALOGUE_PORT": "5183"
+      },
+      "port": 5183
     }
   ]
 }

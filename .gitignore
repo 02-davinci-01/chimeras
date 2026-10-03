@@ -1,5 +1,12 @@
 node_modules/
-covers/
-art/
-dist/
+# Anchored to the root: an unanchored art/ also hid build/art/, the baking code.
+/covers/
+/art/
+/previews/
+/sounds/
+/dist/
+examples/covers/
+examples/art/
+examples/previews/
+examples/dist/
 .DS_Store

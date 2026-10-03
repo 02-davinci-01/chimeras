@@ -4,8 +4,42 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Catalogue · World</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23050507'/%3E%3Cpath d='M9 20l7-4 7 4-7 4z' fill='%23E9E9E6'/%3E%3Ccircle cx='23' cy='9' r='1.5' fill='%23E9E9E6'/%3E%3C/svg%3E">
 </head>
-<body>
+<body class="world">
+
+<canvas id="gl" aria-label="The world: four kingdoms as nebulae in space, every album a card in its cloud, threads where an album belongs to more than one"></canvas>
+
+<div class="labels" id="labels" aria-hidden="true"></div>
+
+<a class="back mono" href="/" id="back"><span aria-hidden="true">←</span> binder</a>
+<button class="sound mono" id="sound" type="button" aria-pressed="true" aria-label="Music">
+  <span class="eq" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>
+  <span class="sound-word" id="sound-word">sound</span>
+  <span class="sound-track" id="sound-track" data-text=""></span>
+</button>
+<div class="hud-status mono" aria-live="polite">
+  <p class="status" id="status"></p>
+  <p class="status find" id="find" hidden></p>
+</div>
+<p class="hint mono" id="hint" aria-hidden="true"></p>
+
+<form class="search-line" id="search" hidden>
+  <label class="mono" for="q">find</label>
+  <input id="q" type="search" autocomplete="off" spellcheck="false" placeholder="title, artist, k:rock r>=rare">
+</form>
+
+<aside class="notes on-dark" id="notes" aria-live="polite" hidden></aside>
+
+<section class="reveal" id="reveal" aria-live="polite" hidden>
+  <div class="reveal-halo" aria-hidden="true"></div>
+  <div class="reveal-holder" id="holder"></div>
+  <p class="reveal-caption mono" id="caption"></p>
+</section>
+
+<p class="err mono" id="err" hidden></p>
+<p class="perf mono" id="perf" hidden></p>
+
 <script type="module" src="/world/main.ts"></script>
 </body>
 </html>

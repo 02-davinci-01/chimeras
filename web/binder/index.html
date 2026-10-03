@@ -13,9 +13,9 @@
 
 <header class="masthead">
   <div class="mast-copy">
-    <p class="label ink" style="--d:0">every album i've loved, kept like this :)</p>
-    <h1 class="title ink" style="--d:1">catalogue<span class="caret" aria-hidden="true">_</span></h1>
-    <p class="whisper ink" style="--d:2">“Every album a card. Every card a person, somewhere out in the dark.”</p>
+    <p class="label ink" style="--d:0">built because rym was too boring</p>
+    <h1 class="title ink" style="--d:1"><span class="title-word" data-text="chimeras">chimeras</span><span class="caret" aria-hidden="true">_</span></h1>
+    <p class="whisper ink" style="--d:2">“living off borrowed time, the clock ticks faster”</p>
     <dl class="mast-meta ink" style="--d:3" id="meta"></dl>
   </div>
   <div class="mast-hand ink" style="--d:2" id="hand" aria-label="Most recently heard"></div>
@@ -27,17 +27,18 @@
 </section>
 
 <section class="sheet binder ink" style="--d:5" aria-label="The binder">
-  <div class="title-card">
-    <span class="tc-layer mono">Index:01</span>
-    <span class="tc-word">The binder</span>
+  <div class="title-card on-dark">
+    <span class="tc-layer mono">trk 01.</span>
+    <span class="tc-word" data-text="the binder.">the binder.</span>
     <span class="tc-note mono" id="tc-note"></span>
+    <span class="tc-fan" aria-hidden="true"></span>
   </div>
 
   <div class="controls">
     <div class="seg kingdoms" id="kingdoms" role="radiogroup" aria-label="Kingdom"></div>
     <div class="search ticks">
       <span class="label search-label">find</span>
-      <input id="q" type="search" placeholder="title, artist, review, or k:rock r>=rare year:1990s" autocomplete="off" spellcheck="false" aria-label="Search the catalogue">
+      <input id="q" type="search" placeholder="title, artist, or k:rock r>=rare year:1990s" autocomplete="off" spellcheck="false" aria-label="Search the catalogue">
       <span class="search-count mono" id="search-count"></span>
       <kbd class="slash" aria-hidden="true">/</kbd>
     </div>
@@ -54,10 +55,10 @@
     <p class="no-match" id="empty" hidden><span class="label">nothing here</span><br>No card matches <span id="empty-q"></span>.</p>
   </div>
 
-  <aside class="rail" aria-hidden="true"><span class="rail-dot"></span><span class="rail-text">every album is a person</span></aside>
+  <aside class="rail" aria-hidden="true"><span class="rail-dot"></span><span class="rail-text">every album is a card</span></aside>
 
   <footer class="title-block mono">
-    <div><span>index</span><b>01 of 02</b></div>
+    <div><span>track</span><b>01 of 02</b></div>
     <div><span>title</span><b>Binder</b></div>
     <div><span>showing</span><b id="tb-showing">—</b></div>
     <div><span>sorted by</span><b id="tb-sort">—</b></div>
@@ -66,8 +67,8 @@
 </section>
 
 <footer class="foot">
-  <a class="to-world" id="world" href="/world"><span class="label">index:02</span><span class="to-world-word">Close the binder, open the world</span><span class="arrow" aria-hidden="true">→</span></a>
-  <p class="mono foot-note">rev A · Oct 2026 · logseq is the source of truth for words</p>
+  <a class="to-world" id="world" href="/world"><span class="label">trk 02. drift : thread : listen.</span><span class="to-world-word" data-text="into the world.">into the world.</span><span class="arrow" aria-hidden="true">→</span></a>
+  <p class="mono foot-note">rev B · Oct 2026 · reviews stay local at my logseq for they are personal :p</p>
 </footer>
 
 <nav class="dock mono" aria-label="Views"><a href="/" aria-current="page">binder</a><a href="/world" id="dock-world">world</a></nav>

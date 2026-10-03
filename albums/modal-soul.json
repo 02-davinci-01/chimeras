@@ -6,15 +6,14 @@
   "spotify": "6b08FpNaFFTjc1dJ9DSWfn",
   "cover": "https://i.scdn.co/image/ab67616d0000b273421d647a4f604d79943f4dad",
   "kingdom": "hiphop",
+  "also": [
+    "electronic"
+  ],
+  "track": "Feather",
   "logseq": {
     "page": "Modal Soul"
   },
   "added": "2026-10-03",
   "first": "2026-09-08",
-  "pack": null,
-  "person": {
-    "brief": "",
-    "base": "hiphop",
-    "traits": []
-  }
+  "pack": null
 }

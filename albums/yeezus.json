@@ -6,15 +6,14 @@
   "spotify": "7D2NdGvBHIavgLhmcwhluK",
   "cover": "https://i.scdn.co/image/ab67616d0000b2731dacfbc31cc873d132958af9",
   "kingdom": "hiphop",
+  "also": [
+    "electronic"
+  ],
+  "track": "On Sight",
   "logseq": {
     "page": "Yeezus"
   },
   "added": "2026-10-03",
   "first": "2022-10-14",
-  "pack": null,
-  "person": {
-    "brief": "",
-    "base": "hiphop",
-    "traits": []
-  }
+  "pack": null
 }

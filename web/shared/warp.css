@@ -1,0 +1,68 @@
+/* Glitch pop, after Sweet Trip's Velocity : Design : Comfort: the cover's sky blue and grid blue, its rainbow fan,
+   lowercase words that end in a full stop, and type that stutters like a skipping buffer. */
+
+:root{
+  --vdc-sky:#3B3DA8; --vdc-grid:#5B86D6; --vdc-pink:#F06FB0; --vdc-cyan:#33B6D9;
+  --vdc-rainbow:#E8473B,#F28C2B,#F5D13A,#5DBB4C,#33B6D9,#3D63C9,#8C55C8,#F06FB0;
+  --vdc-rainbow-stops:#E8473B 0 4deg,#F28C2B 0 8deg,#F5D13A 0 12deg,#5DBB4C 0 16deg,#33B6D9 0 20deg,#3D63C9 0 24deg,#8C55C8 0 28deg,#F06FB0 0 32deg;
+}
+
+/* ── the warp overlay ── */
+.warp{position:fixed;inset:0;z-index:1000;overflow:hidden;pointer-events:all;cursor:default}
+.warp canvas{position:absolute;inset:0;width:100%;height:100%;display:block;pointer-events:none}
+.warp-fan{position:absolute;left:0;top:0;width:260vmax;height:260vmax;border-radius:50%;opacity:0;pointer-events:none;will-change:transform,opacity;
+  -webkit-mask:radial-gradient(closest-side,transparent 0 6%,#000 22%,#000 60%,transparent 100%);mask:radial-gradient(closest-side,transparent 0 6%,#000 22%,#000 60%,transparent 100%);
+  mix-blend-mode:screen;filter:saturate(1.1)}
+.warp-type{position:absolute;left:clamp(24px,7vw,120px);top:clamp(40px,12vh,140px);display:flex;flex-direction:column;gap:18px;pointer-events:none;opacity:0}
+.warp-type b{position:relative;font:700 clamp(46px,7.4vw,108px)/.9 var(--fd);letter-spacing:-.045em;text-transform:lowercase}
+.warp-type span{font:500 12px/1 var(--fm);letter-spacing:.08em;text-transform:lowercase;opacity:.8}
+.warp-type.dream span{text-shadow:0 0 12px rgba(46,48,150,.8)}
+html.warping{cursor:progress}
+/* The loading screen keeps the fan to the right of the vanishing point, as on the cover, and sets the line in two. */
+.warp-fan.side{
+  -webkit-mask:radial-gradient(closest-side,transparent 0 6%,#000 22%,#000 60%,transparent 100%),linear-gradient(90deg,transparent 50%,#000 56%);-webkit-mask-composite:source-in;
+  mask:radial-gradient(closest-side,transparent 0 6%,#000 22%,#000 60%,transparent 100%),linear-gradient(90deg,transparent 50%,#000 56%);mask-composite:intersect}
+.warp-type.dream{gap:22px}
+.warp-type.dream b{white-space:pre-line;font-size:clamp(40px,6.2vw,92px);line-height:.98;text-transform:none;text-shadow:0 0 28px rgba(46,48,150,.6),0 2px 4px rgba(46,48,150,.35)}
+.warp-type.dream b::before,.warp-type.dream b::after{white-space:pre-line}
+.warp-progress{display:block;width:min(280px,60vw);height:2px;margin-top:-4px;background:linear-gradient(90deg,var(--vdc-rainbow));transform-origin:0 50%;transform:scaleX(0)}
+
+/* ── glitch text: two tinted copies slip in and out of slices; add .glitch for as long as it should stutter ── */
+.glitch{position:relative}
+.glitch[data-text]::before,.glitch[data-text]::after,
+.glitch [data-text]::before,.glitch [data-text]::after{content:attr(data-text);position:absolute;left:0;top:0;width:100%;pointer-events:none}
+.glitch[data-text]::before,.glitch [data-text]::before{color:var(--vdc-pink);mix-blend-mode:multiply;animation:slip-a .42s steps(1) infinite}
+.glitch[data-text]::after,.glitch [data-text]::after{color:var(--vdc-cyan);mix-blend-mode:multiply;animation:slip-b .36s steps(1) infinite}
+.warp .glitch [data-text]::before,.warp .glitch [data-text]::after,.on-dark .glitch[data-text]::before,.on-dark .glitch[data-text]::after{mix-blend-mode:screen}
+.glitch > [data-text],.glitch[data-text]{animation:jolt .5s steps(1) infinite}
+@keyframes slip-a{
+  0%{clip-path:inset(8% 0 72% 0);transform:translate(-4px,0)}
+  20%{clip-path:inset(54% 0 22% 0);transform:translate(5px,0)}
+  40%{clip-path:inset(30% 0 52% 0);transform:translate(-2px,0)}
+  60%{clip-path:inset(80% 0 4% 0);transform:translate(3px,0)}
+  80%{clip-path:inset(12% 0 60% 0);transform:translate(-6px,0)}
+  100%{clip-path:inset(0 0 100% 0)}}
+@keyframes slip-b{
+  0%{clip-path:inset(62% 0 18% 0);transform:translate(4px,0)}
+  25%{clip-path:inset(6% 0 80% 0);transform:translate(-5px,0)}
+  50%{clip-path:inset(40% 0 38% 0);transform:translate(2px,0)}
+  75%{clip-path:inset(84% 0 2% 0);transform:translate(-3px,0)}
+  100%{clip-path:inset(0 0 100% 0)}}
+@keyframes jolt{0%,100%{transform:none}30%{transform:translateX(1.5px)}32%{transform:translateX(-2px)}34%{transform:none}70%{transform:skewX(-6deg)}72%{transform:none}}
+
+/* A one-off stutter, for things that glitch in once and settle. */
+.stutter{animation:stutter .52s steps(1) 1 both}
+@keyframes stutter{
+  0%{opacity:0;clip-path:inset(0 100% 0 0)}
+  12%{opacity:1;clip-path:inset(0 62% 0 0);transform:translateX(-6px)}
+  24%{clip-path:inset(0 30% 0 0);transform:translateX(4px)}
+  36%{clip-path:inset(0 46% 0 0);transform:translateX(-2px)}
+  48%{clip-path:inset(0 12% 0 0);transform:translateX(2px);text-shadow:-2px 0 var(--vdc-pink),2px 0 var(--vdc-cyan)}
+  60%{clip-path:inset(0 0 0 0);transform:translateX(-1px);text-shadow:1px 0 var(--vdc-pink),-1px 0 var(--vdc-cyan)}
+  76%{transform:none;text-shadow:none}
+  100%{opacity:1;clip-path:none;transform:none;text-shadow:none}}
+
+@media (prefers-reduced-motion:reduce){
+  .glitch[data-text]::before,.glitch[data-text]::after,.glitch [data-text]::before,.glitch [data-text]::after{display:none}
+  .glitch > [data-text],.glitch[data-text],.stutter{animation:none}
+}

@@ -11,18 +11,5 @@
   },
   "added": "2026-10-02",
   "first": "2019-12-30",
-  "pack": null,
-  "person": {
-    "brief": "[Vedant's description goes here]",
-    "base": "indie",
-    "head": "default",
-    "traits": [],
-    "motion": {
-      "gait": "shuffle",
-      "tempo": 0.9
-    },
-    "colours": {
-      "body": "palette:0"
-    }
-  }
+  "pack": null
 }

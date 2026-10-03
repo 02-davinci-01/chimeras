@@ -1,4 +1,4 @@
-// Plain text from Logseq blocks: the card excerpt and the search index.
+// Plain text from Logseq blocks: the card excerpt and ((uuid)) references.
 import type { Block } from '../types.ts';
 
 export type RefResolver = (uuid: string) => string | null;
@@ -24,14 +24,6 @@ export function toPlain(s: string, resolve: RefResolver = () => null): string {
     .replace(/[ \t]+/g, ' ')
     .replace(/\s*\n\s*/g, ' ')
     .trim();
-}
-
-/** Every block's text, depth first. */
-export function allText(blocks: Block[], resolve?: RefResolver): string {
-  const out: string[] = [];
-  const walk = (bs: Block[]) => { for (const b of bs) { const t = toPlain(b.content, resolve); if (t) out.push(t); walk(b.children); } };
-  walk(blocks);
-  return out.join('\n');
 }
 
 /** First top-level blocks' text, joined and cut at a word boundary near `limit`. */

@@ -4,15 +4,15 @@ Version 1.0, 2 Oct 2026. Owner: Vedant. This file is the single source of truth 
 
 ## 0. How to use this bundle
 
-Read this spec top to bottom once, then open `design/card-reference.html` in a browser; it is the visual contract for the card. `config/` holds the real config files to copy into the repo, `schema/` the JSON Schemas the builder validates against, `examples/` sample albums, a pack and a Logseq page, `skills/` the three Claude skills to install under `.claude/skills/`, and `reference/` the v2 prototype code (art pipeline and PS1 renderer) to port from. Placeholder art in `design/placeholder-art/` is a stand-in pattern, not album covers.
+Read this spec top to bottom once, then open `design/card-reference.html` in a browser; it is the visual contract for the card. `config/` holds the real config files to copy into the repo, `schema/` the JSON Schemas the builder validates against, `examples/` sample albums, a pack and a Logseq page, `skills/` the three Claude skills to install under `.claude/skills/`, and `reference/` the v2 prototype code (art pipeline; the old PS1 renderer is kept for history only) to port from. Placeholder art in `design/placeholder-art/` is a stand-in pattern, not album covers.
 
 Where this spec and the reference code disagree, the spec wins.
 
 ## 1. What we are building
 
-A personal, hand-curated RYM. Every album Vedant has listened to becomes a trading card and a person living in one of four kingdoms (rock, electronic, hip-hop, indie) that float in space. Albums enter only when he tells Claude to add them, so there is no cron, poller or live sync. Logseq stays the source of truth for words: each album's review and rating live on its Logseq page, and the catalogue links to that page instead of copying the thinking.
+A personal, hand-curated RYM. Every album Vedant has listened to becomes a trading card floating in one of four kingdoms (rock, electronic, hip-hop, indie), each a nebula of its own colour in space. Albums enter only when he tells Claude to add them, so there is no cron, poller or live sync. Logseq stays the source of truth for words: each album's review and rating live on its Logseq page, and the catalogue links to that page instead of copying the thinking.
 
-It runs only on his machine. Two views share one data file: the binder (cards, search, packs, the review reader) and the world (four islands in space, album-people he clicks to meet). Rendering in the world is PS1-style low-poly.
+It runs only on his machine. Two views share one data file: the binder (cards, search, packs, the review reader) and the world (four nebulae in space, the cards adrift inside them, and threads running between kingdoms wherever an album belongs to more than one). The world is soft and glowing but cheap to draw.
 
 ## 2. Decisions
 
@@ -28,8 +28,8 @@ It runs only on his machine. Two views share one data file: the binder (cards, s
 | Abstract art | From the cover's colour map; mark per kingdom: rock smear, electronic grid, hip-hop halftone, indie strings. |
 | Packs | Weekly, 3 or 4 sealed albums. Claude proposes, Vedant swaps. |
 | Where judgement lives | Logseq: rating, rarity override, stats, review. |
-| Where appearance lives | The repo: kingdom, person, first-listen date, pack. |
-| Rendering | three.js, PS1 style. Sprite people are the fallback only if per-album 3D authoring proves too slow. |
+| Where appearance lives | The repo: kingdom, other kingdoms (`also`), first-listen date, pack. |
+| Rendering | three.js: instanced card quads, billboard nebulae in a half-size glow layer, shader-driven threads. No people, no PS1/PS2 styling. |
 | Hosting | Local only, served on 127.0.0.1. No deployment in v1. |
 | Colour rule | No blue or gold anywhere in the UI except the rock kingdom's own colour. |
 
@@ -50,7 +50,7 @@ catalogue/
   web/
     shared/                   card component (card.css from design/), fonts, search, data loading
     binder/                   binder page
-    world/                    world page; world/traits/ holds trait modules
+    world/                    world page: nebulae, cards, threads, camera
   dist/                       catalogue.json, search.json (generated)
   .claude/skills/             add-album, make-pack, open-card
 ```
@@ -76,7 +76,7 @@ Scripts: `npm run build` (one build), `npm run dev` (build, watch, serve, open t
 
 ### 5.1 Album file
 
-One file per album, `albums/<id>.json`, validated by `schema/album.schema.json`. The id is a slug of the title, set once and never changed. Fields: `id`, `title`, `artist`, `year`, `spotify`, `cover` (Spotify 640 px URL), optional `runtime`, `kingdom`, `logseq.page`, `added` (date the entry was created), `first` (date Vedant first listened; null while sealed), `pack` (ISO week or null), and `person` (section 10.4). See `examples/albums/`.
+One file per album, `albums/<id>.json`, validated by `schema/album.schema.json`. The id is a slug of the title, set once and never changed. Fields: `id`, `title`, `artist`, `year`, `spotify`, `cover` (Spotify 640 px URL), optional `runtime`, `kingdom`, `logseq.page`, `added` (date the entry was created), `first` (date Vedant first listened; null while sealed), `pack` (ISO week or null), and optional `also`: other kingdoms the album belongs to as well (never its own), each drawn as a thread in the world (section 10.4). Optional `track`: the song the world plays when you meet the card (section 10.6). See `examples/albums/`.
 
 ### 5.2 Kingdoms
 
@@ -112,20 +112,19 @@ Card number is the album's position when every album is sorted by `added` then `
   "packs": [ { "week": "2026-W40", "made": "2026-09-28", "note": null, "albums": ["carrie-and-lowell"] } ],
   "albums": [ {
     "id": "loveless", "no": "017", "title": "loveless", "artist": "my bloody valentine", "year": 1991,
-    "spotify": "3USQKOw0se5pBNEndu82Rb", "kingdom": "rock", "added": "2026-10-02", "first": "2023-11-14", "pack": null,
+    "spotify": "3USQKOw0se5pBNEndu82Rb", "kingdom": "rock", "also": [], "added": "2026-10-02", "first": "2023-11-14", "pack": null,
     "state": "open", "rating": 9.5, "rarity": "rare",
     "stats": { "replay": 4, "sonic": 5, "meaning": 4, "influence": 5 },
-    "art": { "pixel": "art/loveless.pixel.png", "abstract": "art/loveless.abstract.png",
+    "art": { "cover": "art/loveless.cover.webp", "pixel": "art/loveless.pixel.png", "abstract": "art/loveless.abstract.webp",
              "palette": ["#..", "#..", "#..", "#..", "#..", "#..", "#..", "#.."] },
     "excerpt": "First ~280 characters of the review, plain text.",
-    "logseq": { "page": "loveless", "url": "logseq://graph/music?page=loveless" },
-    "person": { "...": "resolved: base defaulted, colours turned into hex" }
+    "logseq": { "page": "loveless", "url": "logseq://graph/music?page=loveless" }
   } ],
   "warnings": [ "crumbling: page has no `meaning::` property" ]
 }
 ```
 
-`dist/search.json` maps album id to the full review as plain text, so search covers reviews without bloating `catalogue.json`.
+`dist/search.json` would map album id to the full review; in this public build it is empty and every `excerpt` is `""`, so no review text leaves the graph. The catalogue carries no graph name and no Logseq URLs either. Ratings and stats are still read from the pages.
 
 ## 6. Builder
 
@@ -137,13 +136,12 @@ Card number is the album's position when every album is sorted by `added` then `
 2. Read each album's Logseq page (section 6.2).
 3. Download any missing covers (section 6.3).
 4. Bake art when it is missing or stale (section 6.3).
-5. Derive state, rarity and card numbers.
-6. Resolve person colours.
-7. Write `dist/catalogue.json` and `dist/search.json` atomically: write to a temp file, then rename.
+5. Derive state, rarity and card numbers; drop any `also` entry that repeats the album's own kingdom.
+6. Write `dist/catalogue.json` and `dist/search.json` atomically: write to a temp file, then rename.
 
 The build never writes to the Logseq graph.
 
-Warnings are collected in the output and printed. They cover a missing page, a missing or out-of-range property, an unknown trait or head, and a pack/album mismatch. Warnings never fail the build. A fatal error (invalid JSON, a schema failure, an unreadable graph path) does.
+Warnings are collected in the output and printed. They cover a missing page, a missing or out-of-range property, an `also` that repeats the album's own kingdom, and a pack/album mismatch. Warnings never fail the build. A fatal error (invalid JSON, a schema failure, an unreadable graph path) does.
 
 ### 6.2 Reading Logseq
 
@@ -182,11 +180,13 @@ Download each `cover` once into `covers/<id>.jpg`. Port the core of `reference/c
   - Quantise to 8 colours with seeded k-means++ in OKLab (10 iterations; the seed is a hash of the id).
   - Apply ordered 4×4 Bayer dithering only where a pixel sits between its two nearest cluster colours (`mix = max(0, (t − 0.12) / 0.38) × 0.5`, where `t = d1 / (d1 + d2)`), so flat areas stay flat.
   - Save at 32×32; viewers scale it with nearest-neighbour.
-- **Palette.** The 8 pixel-art cluster colours as hex, ordered by share. People's colours and any accents use this.
-- **Abstract art** (`art/<id>.abstract.png`, 640×640):
+- **Palette.** The 8 pixel-art cluster colours as hex, ordered by share. Accents use this.
+- **Abstract art** (`art/<id>.abstract.webp`, 640×640, WebP quality 88):
   - Sample the cover at 48×48 and run k-means with 6 colours.
   - Redraw with the kingdom's mark from `MARKS` in the reference: `smear` for rock, `grid` for electronic, `halftone` for hip-hop, `strings` for indie.
   - Draw with `@napi-rs/canvas`. Its `filter: blur()` support may differ from browsers, so implement blur with a box blur if needed.
+- **Cover for the pages** (`art/<id>.cover.webp`, WebP quality 82): the pages never load `covers/<id>.jpg`, which is only the source.
+- **Pruning.** A full build deletes covers, art and previews of albums that no longer exist.
 - **Caching.** Keep `art/.cache.json` keyed by album id, recording cover file hash + art algorithm version + kingdom. Skip unchanged entries. Output is deterministic: the same inputs always produce identical files.
 
 ### 6.4 Watch mode
@@ -246,7 +246,7 @@ Stars and rarity symbols always carry a 0.8 to 1.4 px `#161616` outline, so pale
 - **Back:**
   - The same obi strip.
   - The abstract art in the art window, with a "B" side badge.
-  - The review excerpt in Instrument Serif 15/1.35, clamped to six lines.
+  - In place of the review excerpt, the private-review note in muted italic.
   - "Read the full review".
   - The ridge.
 - **Sealed:**
@@ -340,6 +340,10 @@ Terms are case-insensitive, combine with AND, and update as you type. Non-matchi
 | `sealed`, `open`, `unrated` | state |
 | `pack:2026-W40` | one pack |
 
+### 9.4b Phones
+
+Below 820 px the binder drops its rails and runs one column; below 560 px the masthead hand scales down, the title band drops its note and the dock centres. On phones the enlarged card moves up and its notes come back as a compact sheet beneath it (label, title, artist, rating, rarity, release, first heard, and "read the review").
+
 ### 9.5 Reader
 
 `R`, or "Read the full review", opens a panel on the right, 600 px wide (full screen on narrow windows).
@@ -350,159 +354,108 @@ Terms are case-insensitive, combine with AND, and update as you type. Non-matchi
 - The artist in Instrument Serif italic, 20 px.
 - One quiet line in Instrument Sans 12 px, muted: rating, rarity, the four stats and the first-listen date.
 
-**Body.**
-
-- The page from `GET /logseq/page`, as nested blocks.
-- Text in Instrument Serif 18/1.55.
-- Each nesting level indents 18 px and draws a 1 px `#E0E0DC` rule on its left.
-- Links are underlined in the album's kingdom colour; when a link points at another catalogued album, it opens that album.
-
-**Footer.** "Open in Logseq" (`logseq://graph/<graph>?page=<page>`).
-
-The reader never edits the page.
+**Body.** Reviews are private: this is the version that gets posted, and the reviews stay in Vedant's Logseq graph. Wherever a full review would appear (the reader, the card's back, the world's liner notes) it says, in Instrument Serif italic, *reviews stay local at my logseq for they are personal :p*. Nothing links to Logseq (no `logseq://` links, no "Open in Logseq"), and the server has no `/logseq/*` endpoints.
 
 ## 10. World
 
+The world is a place to wander the catalogue by kingdom. There are no people: the cards themselves float in space, each inside its kingdom's nebula, and threads run from a card into every other kingdom it also belongs to. Kid A is rock and electronic, so a thread leaves the Kid A card in the blue rock cloud and runs into the grey electronic one, with a shooting star passing along it now and then.
+
+The rule is that it stays cheap to draw. Everything soft goes into a small offscreen layer, and every kind of thing is one instanced draw.
+
 ### 10.1 Scene
 
-The world is black space (`#050507`, never blue) with a star field: 3,000 points in a shell 400 to 900 units out, 1 to 2 px at render resolution, and about 5% of them twinkling.
-
-**Islands.** The four islands sit on a horizontal ring of radius 90, at 45°, 135°, 225° and 315°, at heights −10, +8, −4 and +12. Each one rotates at 0.005 rad/s and bobs ±1.5 units over 20 s.
-
-Each island is a low-poly floating rock:
-
-- A flat top that is a 12- to 14-sided polygon of radius 24, with jittered vertices.
-- A jagged cone underneath, 18 units deep.
-- Its top is tinted with its kingdom colour mixed 35% into dark ground.
-- A thin rim of kingdom-coloured light runs around its edge.
-
-In the space view, each island shows its name in Dela Gothic One with its album count, as a sprite.
+- **Space:** `#050507`, with 3,000 far stars in a shell that follows the camera (no parallax). About 5% of them twinkle.
+- **Nebulae.** One per kingdom, on a horizontal ring of radius 100 at 45°, 135°, 225° and 315°, at heights −10, +8, −4 and +12, with a cloud radius of about 26. Each nebula has:
+  - 64 soft billboards ("puffs") cut from one baked fractal-noise texture (four variants in a 2×2 atlas). They sit in 3 or 4 seeded lobes and turn very slowly.
+  - A hot core of 8 brighter puffs.
+  - A colour taken from the kingdom's own colour, lifted so dark ones still glow. A third of the outer puffs drift a few degrees of hue toward a neighbour.
+  - 16 dust puffs that subtract the cloud's own colour in proportion, which carves dark lanes without shifting the hue.
+  - 160 stars inside the cloud, denser toward the core and tinted between white and the kingdom colour.
+- **Labels.** In the space view, each kingdom shows its name in Dela Gothic One and its card count, as an HTML label above the cloud.
 
 ### 10.2 Rendering
 
-PS1 style, ported from `reference/ps1-world-v2.html`:
+- Two layers. The **glow layer** holds the nebula puffs, the dust and a soft copy of the threads. It renders into a target half the CSS size (half-float where supported) and is composited additively with a soft shoulder (`1 − e^−x`), so stacked clouds glow toward white instead of clipping. The **sharp layer** holds the stars, the cards, the crisp threads and the comets, at the device pixel ratio (capped at 2) with MSAA.
+- No PS1 or PS2 styling: no vertex snapping, no low-res target for the sharp layer, no colour quantising.
+- Puffs fade out as the camera comes close to them, so nothing reads as a flat sprite up close.
 
-- Render to a target 240 px tall, with width set by the aspect ratio, and upscale with nearest-neighbour. No antialiasing.
-- Snap vertices to that grid in the vertex shader (the `ps1()` patch on `project_vertex`).
-- Quantise colour to 15 bits in the fragment shader.
-- Lambert (Gouraud) lighting from one directional light and one ambient light.
-- Distance fog only in the kingdom and person views (near 30, far 140).
-- Textures use NearestFilter with no mipmaps.
+### 10.3 Cards
 
-### 10.3 Camera and controls
+Every album is one card in its kingdom's cloud.
 
-The viewer is always floating; there is no walking.
+- **Faces.** Each face is a faithful miniature of the Obi card (cover, obi strip with title, pen date and foot, stats, rarity badge; the sealed face for sealed albums), drawn once into one canvas atlas. The atlas is the smallest power of two that fits, up to 4096 px, with cells up to 256 px wide.
+- **Drawing.** All cards draw as two instanced quads: the opaque card (a rounded-rect SDF, depth-writing), then an additive glow around it in the kingdom colour.
+- **Placement.** Each card is placed by a seed of its id, inside the cloud and at least 9.5 units from any other card. Adding a card never moves the others.
+- **Motion.** Cards always face the camera, sway a little in yaw and roll, and bob ±0.35. The bob formula is shared with the thread shader, so threads stay pinned to their cards.
+- **Finishes.** Divine cards get a pearly sheen sweeping across them now and then. Rare cards get a shimmering border.
+- **Search.** The world accepts `?q=` with the binder's grammar. Matching cards glow, and the rest dim to silhouettes. `N` steps through matches.
+- **Sealed.** Sealed albums float in their provisional kingdom showing the sealed face.
+
+### 10.4 Threads
+
+For every kingdom in an album's `also`, one thread runs from its card into that kingdom's cloud:
+
+- **Strands.** Three quadratic-curve strands leave the card together, arc above the straight line, and fan apart as they land on the near side of the far cloud. Four short tendrils then spread from the landing points.
+- **Colour.** The kingdom colour of the source, blending into the destination's.
+- **Shooting star.** Every 8 to 14 s, a comet runs the length of the main strand in about a quarter of that time, then breaks into sparks along the tendrils.
+- **Brightness.** Threads are faint at rest. They brighten when their card is hovered or met, when it matches a search, and in the kingdom view when they touch the current kingdom.
+- **Cost.** All of it is evaluated in the vertex shader from three control points per strand. That is one draw for the lines, one for the comets and one for the glow copy. Per-thread brightness goes through a one-row texture, so nothing per-vertex is uploaded per frame.
+
+### 10.5 Camera and controls
+
+The viewer is always floating.
 
 | State | Camera | Input |
 | --- | --- | --- |
-| Space | 230 units from the origin, 25° elevation, orbiting by itself at 0.02 rad/s. | Hovering an island brightens its rim; a click or keys `1`–`4` fly to it. |
-| Kingdom | Orbits the island centre at radius 46 (scroll from 24 to 70) and 28° elevation (drag from 10° to 60°). Its own slow orbit (0.05 rad/s) resumes after 4 s idle. | Clicking a person goes to the person view. `Esc` or clicking empty space goes back to space. |
-| Person | 5.5 units from the person, along the island-centre-to-person direction turned 25°, at 2.4 × the person's height scale, looking at the chest. | `←` / `→` move to the previous or next person on the island, in card order. `R` opens the reader. `Esc` goes back. |
+| Space | 300 units from the origin, 22° elevation, orbiting by itself at 0.018 rad/s. | Hovering a cloud brightens it; a click or keys `1`–`4` fly to it. |
+| Kingdom | Orbits the cloud centre at radius 64 (scroll from 26 to 120) and 16° elevation (drag from −40° to 70°). Its own slow orbit resumes after 4 s idle. | Click a card (in any cloud in view) to meet it. `Esc` or clicking empty space goes back to space. |
+| Card | Backs off until the 3D card is exactly as tall on screen as the big card, and slides sideways so it sits under it. If the card has a thread, the camera stands about 32° off the line to the far cloud, so the thread runs off across the open half of the screen. | `←` / `→` move to the previous or next card in the kingdom. `T` follows a thread to the kingdom it leads to. `F` flips, `R` opens the reader, `Esc` goes back. |
 
-**Transitions.**
+**Transitions.** 1.7 s into or out of space, and 1.15 s otherwise, easing in and out along an arc that rises above the straight line.
 
-- Space to kingdom: 1.6 s.
-- Kingdom to person: 1.1 s.
-- Both ease in and out cubically, along an arc that rises above the straight line.
+**Reveal.** 0.25 s after the camera lands, the big Obi card fades in on the right (centred on narrow screens) and the 3D card dissolves underneath it into small squares with a kingdom-coloured edge. Any card nearer the camera than twice the focused card's distance dissolves out of the way, with slack either side so it never flickers. Hovering a card brightens its glow and its threads.
 
-**Reveal.** 0.5 s after the camera arrives at a person, their Obi card slides in from the right at 2×, vertically centred. The person turns slowly toward the camera and keeps animating. Hovering a person shows only a pointer cursor and a faint white rim (an inverted hull at 60%). It never shows a name, because the click is the reveal.
+**Liner notes.** The open side of the card view carries the album's notes over a soft dark scrim: number, kingdom and rarity; the title lowercased with a full stop, the way *Velocity : Design : Comfort* writes everything; artist and year; rating and first-listen date; the four stats as a five-step sequencer whose playhead walks with the music; the private-review note; buttons for each thread and for the reader and flip. Lines stutter in one after another. Cards drifting behind the notes fade out. Hidden below 720 px wide or when there is less than 300 px of room.
 
-**Search.** The world accepts `?q=` with the binder's grammar. Matching people glow in their kingdom colour and the rest dim to 30%. `N` steps through matches.
+### 10.6 Sound
 
-### 10.4 People
+Each scene loops a song from `sounds/` (git-ignored, Vedant's own files), named in `config/sounds.json` with its title, artist and measured loudness (`lufs`, from ffmpeg's `ebur128`), so every scene plays at the same level. Open space plays Aphex Twin's *Rhubarb*; rock *Keep On Lying* (Tame Impala), electronic *In the Fog II* (Tim Hecker), hip-hop Madvillain's *Accordion* instrumental, indie *Dsco* (Sweet Trip). Songs stream through `<audio>` elements wired into WebAudio, so nothing large is decoded into memory; the server honours byte ranges so they seek and loop. Leaving a scene fades its song out and pauses it in place, so coming back picks up where it was. A scene with no song (or a missing file, which is a build warning) falls back to a generative WebAudio loop: a glitch-pop drift for space, and for the kingdoms a shoegaze wall, an IDM pattern, a swung boom-bap and jangling arpeggios. Scenes crossfade over about 2 s. The reader muffles the music behind a low-pass while it is open; a hidden tab pauses it. Beats are detected from jumps in low-end energy, and the notes' step sequencer walks on them.
 
-Every album is one person.
+**The album's own track.** Each album can name a `track`. A file in `sounds/` whose name holds the track name (whole words, so *In the Fog II* is not *In the Fog I*) is played whole for that album; Yeezus plays *On Sight* this way. Otherwise the build finds it through Apple's public search API (the album first, then the song by that artist), downloads the 30-second preview once into `previews/<id>.m4a` (git-ignored, cached by the name asked for) and puts `track: { name, no, preview }` in the catalogue. A track it can't find is a build warning, never a failure. The clip is fetched while the camera flies to the card; when the card arrives, the loops duck out and the clip fades in, a level just above them. Moving to a neighbour crossfades clip to clip. If the card's track is the song already looping in its kingdom (Velocity : Design : Comfort and *Dsco*), it simply carries on. When the clip plays out, or you leave the card, the kingdom's loop comes back. Sealed cards play nothing. The notes show `trk 01. everything in its right place.` over a hairline that fills as it plays, and the toggle shows the same name while it sounds.
 
-**Structure.** People are built from boxes, cylinders and icosahedra, at most 300 triangles each, with this rig:
+The toggle sits top right: five bars that follow the spectrum and what is playing, lowercased with a full stop (`rhubarb.`; the generative loops have colon names like `drift : design : comfort.`). `M` toggles it. On by default, remembered in `localStorage` (`world.sound`). Browsers start audio only after a gesture, so it begins with the first click or key.
 
-- `root` → `hips` → `torso`, with `head`, `armL` and `armR` (pivoting at the shoulders), and `legL` and `legR` (pivoting at the hips).
-
-**Base bodies**, one per kingdom:
-
-| Base | Shape | Default head | Default gait |
-| --- | --- | --- | --- |
-| rock | Lanky: height scale 1.15, narrow torso, long arms and legs, small head. | default | stride |
-| electronic | Built from 0.3-unit voxel cubes: two-cube-wide torso, cube limbs, a 0.46 cube head. | cube | hop (one grid step every 0.45 s) |
-| hiphop | Heavy and square: wide torso (1.3 × 1.1 × 0.78), short thick legs, thick arms. | default (large cube) | stride, slow |
-| indie | Slight: height scale 0.95, narrow shoulders, an 8° forward hunch, arms tucked as if hands in pockets, a slightly large head. | default | shuffle |
-
-**Heads:**
-
-- `default`: plain, with no features.
-- `static`: the front face is live noise; one shared texture, updated every 3 frames.
-- `faceless`: a smooth icosahedron.
-- `cover`: the front face is the album's pixel art.
-- `skull`: a wireframe icosahedron.
-- `cube`: a voxel cube.
-
-**Motion:**
-
-- `gait` is one of walk, shuffle, stride, drift, hop or still.
-- `tempo` scales speed and limb swing.
-- `bpm` drives any trait that keeps time.
-
-**Colours.** `palette:N` resolves to the N-th cover palette colour. The defaults are body `palette:0`, accent `palette:2`, and skin at 60% of `palette:0`'s lightness.
-
-**Wandering.** People pick random targets on their island's top (inside radius 20), pause for 1 to 6 s, keep at least 1.2 units apart, and never step off the rim.
-
-### 10.5 Traits
-
-A trait is one module in `web/world/traits/<name>.ts`, registered in `traits/index.ts`:
-
-```ts
-export interface PersonRig {
-  root: THREE.Group;
-  parts: { hips; torso; head; armL; armR; legL; legR };   // THREE.Object3D
-  materials: { body; accent; skin };                       // THREE.Material
-  palette: string[];                                       // 8 hex, by share
-  album: AlbumOut;                                         // the catalogue.json entry
-}
-export interface Trait {
-  name: string;
-  apply(p: PersonRig): void;                    // once, after the base body and head
-  update?(p: PersonRig, t: number, dt: number): void;
-}
-```
-
-Traits apply in the order listed. An unknown name is a build warning and is skipped at runtime.
-
-Ship these ten in v1:
-
-| Trait | What it does |
-| --- | --- |
-| `bowed` | Head pitched about 0.55 rad down, eyes on the ground. |
-| `trailing-noise` | Two or three after-images that lag behind by 0.15 s and fade. |
-| `skeleton` | Replaces the body with 0.07-thick bones and three ribs. |
-| `translucent` | Body and head at 55% opacity. |
-| `hover` | Floats 0.35 above the ground and bobs slowly. |
-| `voxel-glitch` | Every 0.14 s, a few parts jump by one quantised step and snap back. |
-| `halo` | A thin low-poly ring above the head in the accent colour, spinning slowly. |
-| `nod` | The head nods on the beat at `motion.bpm` (default 90). |
-| `cape` | A two-segment cloth plane that sways with the gait. |
-| `flicker` | Turns invisible for one or two frames at random intervals. |
-
-New traits get added when Vedant describes something no module covers (see the add-album skill). Each trait stays small and works on any base body.
-
-### 10.6 Sealed albums
-
-Sealed albums stand at their island's rim as unlit black silhouettes (MeshBasic, `#0A0A0A`) in the base body of their provisional kingdom, facing outward and not moving. Clicking one shows the sealed card. When its card opens, the silhouette takes on its colours and walks in.
+**Phones and tablets (up to 960 px).** The big card is centred in the space above a sheet along the bottom (the camera lifts the 3D card to match, so the hand-over still lines up). The sheet carries the essentials and the controls: number, kingdom, rarity, the lowercased title, artist and year, the track line, threads, and ‹ read flip ›. A sideways swipe on the card moves to the next or previous one; two fingers pinch to near or far in a kingdom. The status line hides at a card, and the sound toggle shows only its bars.
 
 ### 10.7 Performance
 
-Hold 60 fps with 300 people on integrated graphics.
+- Hold 60 fps with 300 cards on integrated graphics.
+- The whole world is 10 draw calls, whatever the catalogue size: 3 in the glow layer (puffs, dust, thread glow) and 7 in the sharp layer (composite, stars, cloud stars, cards, card glow, threads, comets). The `?fps` readout counts the sharp layer only.
+- Picking projects card centres to the screen and tests their rectangles. Nothing is raycast against geometry.
+- `?stress=300` builds a synthetic catalogue, a third of it threaded, and `?fps` shows a readout.
 
-- People of one base share geometry.
-- One static-noise texture is shared by everyone.
-- Raycast only against bounding boxes on the current island.
-- In the space view, people further than 150 units render as single coloured points.
+### 10.8 Between the views
+
+The binder and the world are joined by a warp drawn from the cover of *Velocity : Design : Comfort*: a blue perspective grid running to a horizon, a rainbow fan opening from the vanishing point, glitch bars, and lowercase words with a full stop (`the world.` / `trk 02. drift : thread : listen.`). It replaces the old Lain-style title cards (`Index:0N`, scanlines, RGB flicker). One 2D canvas draws it; it costs nothing at rest.
+
+- **Binder → world** (1 s). The sheet's grid tips back into a floor, the sky goes from VDC blue to black, the floor races toward you under the fan, then everything settles to a black horizon. A short riser plays if sound is on.
+- **World arriving.** This is the world's boot on every load. It starts on the exact frame the warp ended on and holds there until the world is ready, then the camera looks up off the floor into space and the overlay lets go. A direct visit fades the floor and words in first. Any click or key skips it.
+- **World → binder** (0.95 s). The music fades, the camera looks back down at the floor, which rises up to face you and turns back into paper with the sheet's faint grid.
+- **Binder arriving** (after a warp only). That paper lifts off as the ink comes in.
+
+**Loading screen.** Any load that didn't come through the warp (a reload, a first visit) opens on the cover itself: VDC-blue sky with drifting cumulus, the white floor with its blue grid gliding toward you, the rainbow fan turning to the right of the vanishing point, and in white, top left, *It's all a dream, / A dream in death* over `drl 136. loading : catalogue : comfort.` and a rainbow progress hairline. It holds for at least 1.9 s and until the page is ready, then turns into the page in the warp's language: for the world, dusk falls, the fan sweeps shut and the camera looks up into space; for the binder, the floor rises into the sheet's paper and lifts off as the ink comes in. A click or key cuts the hold short.
+
+A note in `sessionStorage` tells the next page it came through the warp. Reduced motion skips straight to the page. In development, `warpFrame('toWorld', 500)` freezes any timeline at a given millisecond for tuning.
+
+In the binder the same language shows in the title band (`trk 01.` / `the binder.`, which stutters once and opens a rainbow fan the first time it scrolls into view), the masthead wordmark's one-off glitch, and the link to the world (`into the world.`, with a rainbow underline and a pink-and-cyan skip on hover).
 
 ## 11. Workflows
 
 Every change starts as a sentence from Vedant to Claude running in Claude Code or Cowork on this repo; claude.ai chat cannot write to the disk. The steps are the skills in `skills/`:
 
-- **add-album:** identify the album on Spotify, ask at most three questions, read the Logseq page, translate his description into the person, write the file, build, show the card.
+- **add-album:** identify the album on Spotify, ask at most three questions, read the Logseq page, note any other kingdoms it belongs to (`also`), write the file, build, show the card.
 - **make-pack:** propose 3 or 4 unheard albums, let him swap any, then write the pack and its sealed album entries.
-- **open-card:** edit a card or person in place.
+- **open-card:** edit a card in place, including its kingdom and threads.
 
 Judgement is never written by Claude: rating, stats and review stay in Logseq.
 
@@ -513,7 +466,7 @@ Judgement is never written by Claude: rating, stats and review stay in Logseq.
 3. **Binder.** Done when every search term in section 9.4 returns what it says; packs fan and collapse; sealed cards show no album identity; reveal plays once.
 4. **Reader and server.** Done when nested blocks, properties, links and journal dates render, and "Open in Logseq" opens the right page.
 5. **Skills.** Done when "add Kid A, rock, the review is on the Kid A page" in a fresh Claude Code session ends with the card visible after at most three questions.
-6. **World.** Done when the three camera states and their transitions work; clicking a person reveals their card; the ten traits work on all four bases; and the world holds 60 fps with 300 people.
+6. **World.** Done when the three camera states and their transitions work; clicking a card hands over to the big card in place; every `also` draws a thread with its shooting star; and the world holds 60 fps with 300 cards in 10 draw calls.
 
 The whole thing must work offline after the first build: fonts, three.js, covers and art are all local.
 

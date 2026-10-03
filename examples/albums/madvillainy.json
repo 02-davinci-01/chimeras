@@ -11,21 +11,5 @@
   },
   "added": "2026-10-02",
   "first": "2022-07-09",
-  "pack": null,
-  "person": {
-    "brief": "[Vedant's description goes here]",
-    "base": "hiphop",
-    "head": "default",
-    "traits": [
-      "nod"
-    ],
-    "motion": {
-      "gait": "stride",
-      "tempo": 0.8,
-      "bpm": 90
-    },
-    "colours": {
-      "body": "palette:0"
-    }
-  }
+  "pack": null
 }

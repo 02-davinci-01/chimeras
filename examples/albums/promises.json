@@ -11,23 +11,5 @@
   },
   "added": "2026-10-02",
   "first": "2021-04-02",
-  "pack": null,
-  "person": {
-    "brief": "[Vedant's description goes here]",
-    "base": "electronic",
-    "build": {
-      "height": 1.0,
-      "mass": 1.0
-    },
-    "head": "default",
-    "traits": [],
-    "motion": {
-      "gait": "drift",
-      "tempo": 0.6
-    },
-    "colours": {
-      "body": "palette:0",
-      "accent": "palette:1"
-    }
-  }
+  "pack": null
 }

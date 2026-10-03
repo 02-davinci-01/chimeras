@@ -3,7 +3,7 @@
   "private": true,
   "version": "1.0.0",
   "type": "module",
-  "description": "Vedant's hand-curated RYM: album cards in a binder and album-people in a PS1 world.",
+  "description": "Vedant's hand-curated RYM: album cards in a binder, and a world where they drift in four kingdom nebulae.",
   "engines": {
     "node": ">=20"
   },

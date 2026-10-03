@@ -9,17 +9,19 @@ import { Builder, BuildError } from './catalogue.ts';
 export async function dev(builder: Builder, opts: { open: boolean }) {
   const t = performance.now();
   await builder.build();
+  // CATALOGUE_PORT lets a second dev server run beside the usual one.
+  if (process.env.CATALOGUE_PORT) builder.cfg.server.port = Number(process.env.CATALOGUE_PORT);
   console.log(`built in ${((performance.now() - t) / 1000).toFixed(2)}s`);
 
   const repo = path.resolve(import.meta.dirname, '..');
   const vite = await createVite({ configFile: path.join(repo, 'vite.config.ts'), server: { middlewareMode: true, ws: { host: '127.0.0.1', port: builder.cfg.server.port + 20000 } }, appType: 'mpa' });
-  const server = createServer({ root: builder.root, cfg: builder.cfg, graph: () => builder.graph, vite });
+  const server = createServer({ root: builder.root, cfg: builder.cfg, vite });
   const url = await server.listen();
   console.log(`catalogue on ${url}  (world: ${url}world)`);
   if (opts.open) execFile('open', [url]);
 
   // Pending changes, applied together after 300 ms of quiet.
-  const pending = { albums: new Set<string>(), removed: new Set<string>(), packs: new Set<string>(), removedPacks: new Set<string>(), pages: new Set<string>(), config: false, traits: false };
+  const pending = { albums: new Set<string>(), removed: new Set<string>(), packs: new Set<string>(), removedPacks: new Set<string>(), pages: new Set<string>(), config: false };
   let timer: NodeJS.Timeout | null = null;
   let running = Promise.resolve();
 
@@ -27,7 +29,7 @@ export async function dev(builder: Builder, opts: { open: boolean }) {
 
   async function flush() {
     const p = { ...pending, albums: [...pending.albums], removed: [...pending.removed], packs: [...pending.packs], removedPacks: [...pending.removedPacks], pages: [...pending.pages] };
-    pending.albums.clear(); pending.removed.clear(); pending.packs.clear(); pending.removedPacks.clear(); pending.pages.clear(); pending.config = pending.traits = false;
+    pending.albums.clear(); pending.removed.clear(); pending.packs.clear(); pending.removedPacks.clear(); pending.pages.clear(); pending.config = false;
     const t0 = performance.now();
     try {
       if (p.config) {
@@ -48,9 +50,10 @@ export async function dev(builder: Builder, opts: { open: boolean }) {
         }
         if (pageNames.size) await builder.readPages([...pageNames]);
         if (changed.length) await builder.bakeArt(changed.map(a => a.id));
+        if (changed.length) await builder.fetchPreviews(changed.map(a => a.id));
         builder.write(builder.assemble());
       }
-      const what = [p.config && 'config', ...p.albums.map(f => path.basename(f, '.json')), ...p.pages.map(f => path.basename(f)), p.traits && 'traits'].filter(Boolean).join(', ');
+      const what = [p.config && 'config', ...p.albums.map(f => path.basename(f, '.json')), ...p.pages.map(f => path.basename(f))].filter(Boolean).join(', ');
       console.log(`rebuilt (${what || 'removals'}) in ${(performance.now() - t0).toFixed(0)} ms`);
       server.emit('build', { at: Date.now() });
     } catch (e) {
@@ -60,7 +63,7 @@ export async function dev(builder: Builder, opts: { open: boolean }) {
   }
 
   const at = (...p: string[]) => path.join(builder.root, ...p);
-  const watched = [at('albums'), at('packs'), at('config'), path.join(repo, 'web', 'world', 'traits')];
+  const watched = [at('albums'), at('packs'), at('config'), at('sounds')];
   if (builder.graph.pagesDir) watched.push(builder.graph.pagesDir);
   const watcher = chokidar.watch(watched, { ignoreInitial: true, awaitWriteFinish: { stabilityThreshold: 120, pollInterval: 40 } });
   watcher.on('all', (event, file) => {
@@ -69,8 +72,7 @@ export async function dev(builder: Builder, opts: { open: boolean }) {
     const gone = event === 'unlink';
     if (rel.startsWith('albums' + path.sep) && file.endsWith('.json')) (gone ? pending.removed.add(path.basename(file, '.json')) : pending.albums.add(file));
     else if (rel.startsWith('packs' + path.sep) && file.endsWith('.json')) (gone ? pending.removedPacks.add(path.basename(file, '.json')) : pending.packs.add(file));
-    else if (rel.startsWith('config' + path.sep)) pending.config = true;
-    else if (file.includes(path.join('world', 'traits'))) pending.traits = true;
+    else if (rel.startsWith('config' + path.sep) || rel.startsWith('sounds' + path.sep)) pending.config = true;
     else if (/\.(md|markdown)$/i.test(file)) pending.pages.add(file);
     else return;
     schedule();

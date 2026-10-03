@@ -1,0 +1,19 @@
+{
+  "id": "ok-computer",
+  "title": "OK Computer",
+  "artist": "Radiohead",
+  "year": 1997,
+  "spotify": "6dVIqQ8qmQ5GBnJ9shOYGE",
+  "cover": "https://i.scdn.co/image/ab67616d0000b273c8b444df094279e70d0ed856",
+  "kingdom": "rock",
+  "also": [
+    "electronic"
+  ],
+  "track": "No Surprises",
+  "logseq": {
+    "page": "OK Computer"
+  },
+  "added": "2026-10-03",
+  "first": "2023-12-09",
+  "pack": null
+}

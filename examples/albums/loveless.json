@@ -11,26 +11,5 @@
   },
   "added": "2026-10-02",
   "first": "2023-11-14",
-  "pack": null,
-  "person": {
-    "brief": "[example] a bowed figure whose face is static and who trails noise",
-    "base": "rock",
-    "build": {
-      "height": 1.1,
-      "mass": 0.8
-    },
-    "head": "static",
-    "traits": [
-      "bowed",
-      "trailing-noise"
-    ],
-    "motion": {
-      "gait": "drift",
-      "tempo": 0.6
-    },
-    "colours": {
-      "body": "palette:0",
-      "accent": "palette:2"
-    }
-  }
+  "pack": null
 }

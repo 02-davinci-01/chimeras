@@ -1,0 +1,10 @@
+{
+  "$comment": "The world's music: one song per scene, played on a loop while you're there. `file` is in sounds/. `lufs` is the song's integrated loudness (ffmpeg -i <file> -filter_complex ebur128 -f null -), so every scene plays at the same level. A scene with no song falls back to its generative loop. Songs in sounds/ whose name matches an album's `track` are played for that album instead of a preview.",
+  "scenes": {
+    "space": { "file": "Aphex Twin - Rhubarb - Birdman🐦808 (128k).mp3", "title": "Rhubarb", "artist": "Aphex Twin", "lufs": -14.5 },
+    "rock": { "file": "Tame Impala - Keep On Lying (Audio) - Tame Impala (128k).mp3", "title": "Keep On Lying", "artist": "Tame Impala", "lufs": -6.8 },
+    "electronic": { "file": "In the Fog II Ravedeath.mp3", "title": "In the Fog II", "artist": "Tim Hecker", "lufs": -7.3 },
+    "hiphop": { "file": "Madvillain - Accordion Instrumental (Extended) [sftw5F-RR9Y].mp3", "title": "Accordion (instrumental)", "artist": "Madvillain", "lufs": -10.3 },
+    "indie": { "file": "Dsco - Sweet Trip - Topic (128k).mp3", "title": "Dsco", "artist": "Sweet Trip", "lufs": -8.4 }
+  }
+}

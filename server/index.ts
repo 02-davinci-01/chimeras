@@ -3,19 +3,17 @@ import fs from 'node:fs';
 import http from 'node:http';
 import path from 'node:path';
 import type { ViteDevServer } from 'vite';
-import type { GraphReader } from '../build/logseq/graph.ts';
 import type { AppConfig } from '../build/types.ts';
 
 const TYPES: Record<string, string> = {
   '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.css': 'text/css', '.json': 'application/json',
   '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.gif': 'image/gif', '.webp': 'image/webp', '.svg': 'image/svg+xml',
-  '.woff2': 'font/woff2', '.pdf': 'application/pdf', '.mp3': 'audio/mpeg', '.mp4': 'video/mp4',
+  '.woff2': 'font/woff2', '.pdf': 'application/pdf', '.mp3': 'audio/mpeg', '.m4a': 'audio/mp4', '.mp4': 'video/mp4',
 };
 
 export interface ServerContext {
-  root: string;                       // holds dist/, art/, covers/
+  root: string;                       // holds dist/, art/, covers/, previews/, sounds/
   cfg: AppConfig;
-  graph: () => GraphReader;
   vite?: ViteDevServer;               // dev: pages come from Vite; otherwise from dist/web
 }
 
@@ -23,35 +21,27 @@ export function createServer(ctx: ServerContext) {
   const clients = new Set<http.ServerResponse>();
   const webDist = path.join(ctx.root, 'dist', 'web');
 
-  /** Send a file that must sit inside `base`. */
-  function sendFile(res: http.ServerResponse, base: string, rel: string, cache = 'no-cache') {
+  /** Send a file that must sit inside `base`. Honours byte ranges, so audio can seek and loop. */
+  function sendFile(res: http.ServerResponse, base: string, rel: string, cache = 'no-cache', range?: string) {
     const file = path.resolve(base, '.' + path.sep + rel);
     if (file !== base && !file.startsWith(base + path.sep)) return notFound(res, 403);
     fs.stat(file, (err, st) => {
       if (err || !st.isFile()) return notFound(res);
-      res.writeHead(200, { 'content-type': TYPES[path.extname(file).toLowerCase()] ?? 'application/octet-stream', 'content-length': st.size, 'cache-control': cache });
+      const type = TYPES[path.extname(file).toLowerCase()] ?? 'application/octet-stream';
+      const m = range && /^bytes=(\d*)-(\d*)$/.exec(range);
+      if (m && (m[1] || m[2])) {
+        const start = m[1] ? Number(m[1]) : Math.max(0, st.size - Number(m[2]));
+        const end = m[1] && m[2] ? Math.min(Number(m[2]), st.size - 1) : st.size - 1;
+        if (start > end || start >= st.size) { res.writeHead(416, { 'content-range': `bytes */${st.size}` }); return res.end(); }
+        res.writeHead(206, { 'content-type': type, 'content-length': end - start + 1, 'content-range': `bytes ${start}-${end}/${st.size}`, 'accept-ranges': 'bytes', 'cache-control': cache });
+        return fs.createReadStream(file, { start, end }).pipe(res);
+      }
+      res.writeHead(200, { 'content-type': type, 'content-length': st.size, 'accept-ranges': 'bytes', 'cache-control': cache });
       fs.createReadStream(file).pipe(res);
     });
   }
   const notFound = (res: http.ServerResponse, code = 404) => { res.writeHead(code, { 'content-type': 'text/plain' }); res.end(code === 403 ? 'forbidden' : 'not found'); };
   const json = (res: http.ServerResponse, body: unknown, code = 200) => { res.writeHead(code, { 'content-type': 'application/json', 'cache-control': 'no-store' }); res.end(JSON.stringify(body)); };
-
-  async function logseqPage(name: string, res: http.ServerResponse) {
-    const graph = ctx.graph();
-    try { await graph.index(); } catch (e) { return json(res, { error: (e as Error).message }, 500); }
-    const page = await graph.read(name);
-    if (!page) return json(res, { error: `no page named "${name}"` }, 404);
-    // Resolve ((uuid)) references this page makes, so the reader can show their text.
-    const refs: Record<string, string | null> = {};
-    const scan = (blocks: typeof page.blocks) => {
-      for (const b of blocks) {
-        for (const m of b.content.matchAll(/\(\(([0-9a-f-]{36})\)\)/gi)) refs[m[1]] = graph.blockText(m[1]);
-        scan(b.children);
-      }
-    };
-    scan(page.blocks);
-    json(res, { name: page.name, properties: page.properties, blocks: page.blocks, refs });
-  }
 
   const server = http.createServer(async (req, res) => {
     const url = new URL(req.url ?? '/', 'http://127.0.0.1');
@@ -60,11 +50,8 @@ export function createServer(ctx: ServerContext) {
       if (p === '/catalogue.json' || p === '/search.json') return sendFile(res, path.join(ctx.root, 'dist'), p.slice(1), 'no-store');
       if (p.startsWith('/art/')) return sendFile(res, path.join(ctx.root, 'art'), p.slice(5));
       if (p.startsWith('/covers/')) return sendFile(res, path.join(ctx.root, 'covers'), p.slice(8));
-      if (p === '/logseq/page') return logseqPage(url.searchParams.get('name') ?? '', res);
-      if (p.startsWith('/logseq/assets/')) {
-        const dir = ctx.graph().assetsDir;
-        return dir ? sendFile(res, path.resolve(dir), p.slice('/logseq/assets/'.length), 'max-age=3600') : notFound(res);
-      }
+      if (p.startsWith('/previews/')) return sendFile(res, path.join(ctx.root, 'previews'), p.slice(10), 'max-age=3600', req.headers.range);
+      if (p.startsWith('/sounds/')) return sendFile(res, path.join(ctx.root, 'sounds'), p.slice(8), 'max-age=3600', req.headers.range);
       if (p === '/events') {
         res.writeHead(200, { 'content-type': 'text/event-stream', 'cache-control': 'no-cache', connection: 'keep-alive' });
         res.write('retry: 1000\n\n');

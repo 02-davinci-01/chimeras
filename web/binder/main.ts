@@ -4,6 +4,7 @@ import '../shared/system.css';
 import '../shared/card.css';
 import '../shared/card-extra.css';
 import '../shared/reader.css';
+import '../shared/warp.css';
 import './binder.css';
 import { cardElement, flipCard, penDate } from '../shared/card.ts';
 import { loadCatalogue, loadSearch, onRebuild, reducedMotion, reviewText, store } from '../shared/data.ts';
@@ -12,6 +13,7 @@ import { parseQuery, sorted, SORTS } from '../shared/search.ts';
 import { installTooltips } from '../shared/tooltip.ts';
 import type { AlbumOut, Catalogue } from '../shared/types.ts';
 import { STAT_KEYS } from '../shared/types.ts';
+import { arrive, cameThrough, loader, warpLinks } from '../shared/warp.ts';
 
 const $ = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T;
 const grid = $('grid'), shelf = $('shelf'), seg = $('kingdoms'), plate = $('stage'), holder = $('holder'), info = $('plate-info');
@@ -69,7 +71,7 @@ function renderMasthead() {
     ['sealed', sealed ? `${sealed}, waiting` : 'none'],
     ['kingdoms', cat.kingdoms.map(k => k.name.toLowerCase()).join(' · ')],
     ['latest', latest ? `<a href="#${latest.id}" data-open="${latest.id}">${esc(latest.title)}</a> — ${esc(latest.artist)}, ${penDate(latest.first)}` : '—'],
-    ['graph', `${esc(cat.graphName)} <span style="color:var(--faint)">· read ${when.toTimeString().slice(0, 5)}</span>`],
+    ['updated', `${when.toDateString().slice(4).toLowerCase()} <span style="color:var(--faint)">· ${when.toTimeString().slice(0, 5)}</span>`],
   ].map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join('');
 
   const hand = $('hand');
@@ -147,7 +149,7 @@ function renderGrid() {
     if (!slot) { slot = document.createElement('div'); slot.className = 'slot'; slots.set(a.id, slot); reveal.observe(slot); }
     const cap = a.state === 'sealed' || pending
       ? `<span>№ ${a.no}</span><b>sealed · wk ${a.pack ? Number(a.pack.slice(-2)) : '—'}</b>`
-      : `<span>№ ${a.no} / ${a.year}</span><b>${a.first ? `heard ${penDate(a.first)}` : 'unheard'}</b>`;
+      : `<span>№ ${a.no} / ${a.year}</span><b>${a.first ? `heard ${penDate(a.first)}` : a.rating != null ? 'heard' : 'unheard'}</b>`;
     slot.replaceChildren(el);
     slot.insertAdjacentHTML('beforeend', `<div class="caption">${cap}</div>`);
     slot.dataset.id = a.id;
@@ -368,7 +370,7 @@ function infoHTML(a: AlbumOut) {
   if (a.state === 'sealed' || awaitingReveal(a)) {
     const pack = cat.packs.find(p => p.week === a.pack);
     return `<div class="pi-label"><span class="sw"></span><span class="label">sealed · ${a.pack ?? ''}</span></div>
-      <h2 class="pi-title">Sealed</h2><p class="pi-sealed">${a.state === 'sealed' ? 'Not heard yet. It opens when its rating lands on the Logseq page.' : 'Heard. Opening…'}</p>
+      <h2 class="pi-title">Sealed</h2><p class="pi-sealed">${a.state === 'sealed' ? 'Not heard yet. It opens once it has been heard and rated.' : 'Heard. Opening…'}</p>
       <dl class="pi-meta"><dt>pack</dt><dd>${a.pack ?? '—'}${pack?.note ? ` · ${esc(pack.note)}` : ''}</dd><dt>card</dt><dd>${pack ? pack.albums.indexOf(a.id) + 1 : 1} of ${pack?.albums.length ?? 1}</dd><dt>kingdom</dt><dd>${k.name.toLowerCase()}, provisional</dd></dl>
       <div class="pi-keys"><span><kbd>←</kbd><kbd>→</kbd> next</span><span><kbd>esc</kbd> close</span></div>`;
   }
@@ -592,7 +594,7 @@ let qTimer = 0;
 function onQuery() {
   state.q = qInput.value;
   const run = () => (state.hide ? relayout(applyFilter) : applyFilter());
-  // Plain words also search full reviews: fetch them on first use, then filter again.
+  // Plain words also search full reviews where a build includes them (a public build doesn't): fetch on first use.
   if (/(^|\s)[^:<>=\s]+(\s|$)/.test(state.q)) loadSearch().then(run);
   run();
 }
@@ -603,12 +605,29 @@ hideBox.addEventListener('change', () => { state.hide = hideBox.checked; store.s
 
 /* ───────────── boot ───────────── */
 
+/** Make an element skip like a scratched disc for a moment. */
+function glitch(el: Element | null, ms = 620) {
+  if (!el || reducedMotion()) return;
+  el.classList.add('glitch');
+  setTimeout(() => el.classList.remove('glitch'), ms);
+}
+
 function inkIn() {
   const els = document.querySelectorAll<HTMLElement>('.ink:not(.slot)');
   requestAnimationFrame(() => els.forEach(el => el.classList.add('in')));
+  setTimeout(() => glitch(document.querySelector('.title-word'), 560), 380);
+  // The title band stutters and its rainbow fan opens the first time it comes into view.
   const tc = document.querySelector('.title-card');
-  if (tc && !reducedMotion()) new IntersectionObserver((es, o) => { if (es[0].intersectionRatio >= 0.6) { tc.classList.add('flicker'); o.disconnect(); } }, { threshold: 0.6 }).observe(tc);
+  if (tc) new IntersectionObserver((es, o) => {
+    if (es[0].intersectionRatio < 0.6) return;
+    tc.classList.add('lit');
+    glitch(tc.querySelector('.tc-word'));
+    o.disconnect();
+  }, { threshold: 0.6 }).observe(tc);
 }
+
+/** Set while the loading screen is up: the ink waits for it to lift. */
+let holdInk = false;
 
 async function boot() {
   cat = await loadCatalogue();
@@ -622,7 +641,7 @@ async function boot() {
   renderSeg();
   renderShelf();
   renderGrid();
-  inkIn();
+  if (!holdInk) inkIn();
   const hash = decodeURIComponent(location.hash.slice(1));
   if (hash && byId(hash)) openPlate(byId(hash)!);
   if (cat.warnings.length) console.info(`catalogue: ${cat.warnings.length} build warnings`, cat.warnings);
@@ -638,7 +657,17 @@ onRebuild(async () => {
   if (reader.isOpen && reader.current) { const a = byId(reader.current.id); if (a) reader.open(a); }
 });
 
-boot().catch(err => { grid.innerHTML = `<p class="no-match">${esc(String(err.message ?? err))}</p>`; });
+const booted = boot();
+booted.catch(err => { grid.innerHTML = `<p class="no-match">${esc(String(err.message ?? err))}</p>`; });
+// Home from the world: the paper the warp ended on lifts off as the ink comes in. Any other load gets the
+// loading screen, which turns into that same paper; a click or key cuts its hold short.
+if (cameThrough('binder')) arrive('binder', true, booted);
+else {
+  holdInk = true;
+  const l = loader('binder', booted, () => inkIn());
+  for (const ev of ['pointerdown', 'keydown'] as const) addEventListener(ev, l.skip, { once: true, capture: true });
+}
+warpLinks('a[href^="/world"]', 'world', () => { if (plateAlbum) closePlate(); });
 
 addEventListener('resize', () => { if (plateAlbum && !busy) { layoutPlate(); holder.style.transform = `scale(${scale()})`; } });
 addEventListener('scroll', () => document.body.classList.toggle('scrolled', scrollY > innerHeight * 0.5), { passive: true });

@@ -12,7 +12,7 @@ export async function dev(builder: Builder, opts: { open: boolean }) {
   console.log(`built in ${((performance.now() - t) / 1000).toFixed(2)}s`);
 
   const repo = path.resolve(import.meta.dirname, '..');
-  const vite = await createVite({ configFile: path.join(repo, 'vite.config.ts'), server: { middlewareMode: true, hmr: { port: builder.cfg.server.port + 10000 } }, appType: 'mpa' });
+  const vite = await createVite({ configFile: path.join(repo, 'vite.config.ts'), server: { middlewareMode: true, ws: { host: '127.0.0.1', port: builder.cfg.server.port + 20000 } }, appType: 'mpa' });
   const server = createServer({ root: builder.root, cfg: builder.cfg, graph: () => builder.graph, vite });
   const url = await server.listen();
   console.log(`catalogue on ${url}  (world: ${url}world)`);

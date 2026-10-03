@@ -13,3 +13,16 @@ Read in this order:
 7. `reference/`: v2 prototype code to port from: `cover-art.js` (pixel and abstract art) and `ps1-world-v2.html` (PS1 renderer and body plans; its navigation is obsolete).
 
 Placeholder art in `design/placeholder-art/` is a generated pattern, not album covers. Real art comes from the cover pipeline in SPEC.md section 6.3.
+
+## Running it
+
+```
+npm install
+npm run dev      # build, watch albums/, packs/, config/ and the Logseq pages, serve on http://127.0.0.1:5180
+npm run build    # one build into dist/
+npm run check    # validate every album and pack file
+npm test         # Logseq parser and search grammar
+```
+
+`npm run build -- --root examples` builds the five example albums as a fixture. `web/card-test/` is a dev-only
+harness that renders the card component with the reference data, for pixel-diffing against `design/card-reference.html`.

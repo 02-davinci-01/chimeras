@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Catalogue</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='3' y='1' width='26' height='30' rx='3' fill='%23fff' stroke='%23161616' stroke-width='2'/%3E%3Crect x='3' y='1' width='8' height='30' rx='2' fill='%23C62F2B'/%3E%3C/svg%3E">
+</head>
+<body>
+<header class="top">
+  <div class="brand">
+    <h1 class="wordmark">Catalogue</h1>
+    <p class="count" id="count">&nbsp;</p>
+  </div>
+  <div class="search">
+    <svg class="search-icon" viewBox="0 0 16 16" aria-hidden="true"><circle cx="7" cy="7" r="5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M11 11 L14.5 14.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+    <input id="q" type="search" placeholder="Search albums, artists, reviews" autocomplete="off" spellcheck="false" aria-label="Search the catalogue">
+    <kbd class="slash" aria-hidden="true">/</kbd>
+  </div>
+</header>
+<nav class="bar" aria-label="Filters">
+  <div class="chips" id="chips" role="group" aria-label="Kingdoms"></div>
+  <div class="bar-right">
+    <label class="toggle"><input type="checkbox" id="hide"> <span>Hide non-matching</span></label>
+    <label class="sort"><span>Sort</span><select id="sort"></select></label>
+    <a class="world-link" id="world" href="/world">See in world <span aria-hidden="true">→</span></a>
+  </div>
+</nav>
+<section class="shelf" id="shelf" hidden aria-label="Sealed packs"></section>
+<main class="grid" id="grid" aria-label="Cards"></main>
+<p class="no-match" id="empty" hidden>No cards match <span id="empty-q"></span>.</p>
+<div class="stage" id="stage" hidden>
+  <div class="scrim" data-close></div>
+  <div class="halo" aria-hidden="true"></div>
+  <div class="holder" id="holder"></div>
+  <p class="hint" aria-hidden="true"><kbd>F</kbd> flip · <kbd>R</kbd> read · <kbd>←</kbd><kbd>→</kbd> next · <kbd>Esc</kbd> close</p>
+</div>
+<script type="module" src="/binder/main.ts"></script>
+</body>
+</html>

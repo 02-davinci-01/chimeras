@@ -187,7 +187,7 @@ function status() {
 }
 
 const HINTS: Record<Mode, string> = {
-  space: '<kbd>1</kbd>–<kbd>4</kbd> or click a cloud<br><kbd>/</kbd> find · <kbd>m</kbd> sound',
+  space: 'drag to look around · scroll to near<br><kbd>1</kbd>–<kbd>4</kbd> or click a cloud · <kbd>/</kbd> find',
   kingdom: 'drag to turn · scroll to near<br>click a card · <kbd>esc</kbd> back',
   card: '<kbd>←</kbd> <kbd>→</kbd> neighbours · <kbd>t</kbd> follow a thread<br><kbd>f</kbd> flip · <kbd>r</kbd> review · <kbd>esc</kbd> back',
 };
@@ -206,7 +206,7 @@ function go(mode: Mode, nb: Nebula | null = rig.nebula, c: Card | null = null) {
   music.setScene(sceneFor());
   status();
   hint();
-  canvas.classList.toggle('grab', mode === 'kingdom');
+  canvas.classList.toggle('grab', mode !== 'card');
   document.body.classList.toggle('at-card', mode === 'card');
 }
 const toKingdom = (nb: Nebula) => go('kingdom', nb);
@@ -425,7 +425,7 @@ canvas.addEventListener('pointermove', e => {
   if (d) {
     const dx = e.clientX - d.x, dy = e.clientY - d.y;
     d.moved += Math.abs(dx) + Math.abs(dy); d.x = e.clientX; d.y = e.clientY;
-    if (d.moved > TAP() && touches.size < 2) { rig.drag(dx, dy); canvas.classList.toggle('grabbing', rig.mode === 'kingdom'); }
+    if (d.moved > TAP() && touches.size < 2) { rig.drag(dx, dy); canvas.classList.toggle('grabbing', rig.mode !== 'card'); }
   }
 });
 canvas.addEventListener('pointerleave', () => { pointer.inside = false; });
@@ -438,6 +438,7 @@ canvas.addEventListener('pointerdown', e => {
 canvas.addEventListener('pointerup', () => {
   const d = pointer.down; pointer.down = null;
   canvas.classList.remove('grabbing');
+  rig.release();
   // A tap while the camera is still flying in isn't a miss: ignore it rather than back out to open space.
   if (!d || d.moved > TAP() || bootOn || rig.flying) return;
   pick(rig.time);
@@ -445,6 +446,8 @@ canvas.addEventListener('pointerup', () => {
   if (hoverCard) meet(hoverCard);
   else back();
 });
+// The browser took the touch (a system gesture): treat it as a let-go, not a tap.
+canvas.addEventListener('pointercancel', () => { pointer.down = null; canvas.classList.remove('grabbing'); rig.release(); });
 canvas.addEventListener('wheel', e => { e.preventDefault(); rig.zoom(e.deltaY); }, { passive: false });
 // Touch: two fingers pinch to near or far in a kingdom.
 const touches = new Map<number, { x: number; y: number }>();

@@ -8,10 +8,12 @@ import { easeInOutCubic } from './rng.ts';
 
 export type Mode = 'space' | 'kingdom' | 'card';
 const D = Math.PI / 180;
-const SPACE_R = 300, SPACE_EL = 22 * D, SPACE_SPIN = 0.018;
+const SPACE_R = 300, SPACE_RMIN = 210, SPACE_RMAX = 480, SPACE_EL = 22 * D, SPACE_ELMIN = -55 * D, SPACE_ELMAX = 80 * D, SPACE_SPIN = 0.018;
 const K_R = 64, K_RMIN = 26, K_RMAX = 120, K_EL = 16 * D, K_ELMIN = -40 * D, K_ELMAX = 70 * D, K_SPIN = 0.04, IDLE = 4;
 
 interface Pose { pos: THREE.Vector3; target: THREE.Vector3 }
+/** An orbit you can turn by dragging: it carries on a little after you let go, then the idle spin takes over. */
+interface Orbit { az: number; el: number; r: number; idle: number; vAz: number; vEl: number; held: boolean; elMin: number; elMax: number; rMin: number; rMax: number }
 
 /** Where the big card sits on screen: its height in px and its centre in NDC (y is 0 unless a phone lifts it). */
 export interface CardFrame { height: number; ndcX: number; ndcY?: number }
@@ -26,8 +28,9 @@ export class CameraRig {
   frame: () => CardFrame = () => ({ height: 400, ndcX: 0 });
   /** A point the card view should keep on the empty side of the screen: where the card's thread goes. */
   beyond: (c: Card) => THREE.Vector3 | null = () => null;
-  private spaceAz = -0.6;
-  private k = { az: 0, el: K_EL, r: K_R, idle: IDLE };
+  private s: Orbit = { az: -0.6, el: SPACE_EL, r: SPACE_R, idle: IDLE, vAz: 0, vEl: 0, held: false, elMin: SPACE_ELMIN, elMax: SPACE_ELMAX, rMin: SPACE_RMIN, rMax: SPACE_RMAX };
+  private k: Orbit = { az: 0, el: K_EL, r: K_R, idle: IDLE, vAz: 0, vEl: 0, held: false, elMin: K_ELMIN, elMax: K_ELMAX, rMin: K_RMIN, rMax: K_RMAX };
+  private lastDrag = 0;
   /** Direction from the card to the camera, fixed when the flight starts. */
   private toCam = new THREE.Vector3(0, 0, 1);
   private flight: { from: Pose; t: number; dur: number; lift: number } | null = null;
@@ -52,7 +55,7 @@ export class CameraRig {
       if (prev === 'space') { this.k.r = K_R; this.k.el = K_EL; }
       else this.k.el = THREE.MathUtils.clamp(Math.asin((p.y - c.y) / Math.max(1, p.distanceTo(c))), K_ELMIN, K_ELMAX);
       this.k.az = Math.atan2(p.z - c.z, p.x - c.x);
-      this.k.idle = 0;
+      this.k.idle = 0; this.k.vAz = this.k.vEl = 0;
     }
     if (mode === 'card' && card && nebula) {
       const p = cardPos(card, this.time, this.v);
@@ -73,29 +76,57 @@ export class CameraRig {
         this.toCam.copy(fromCam.lerp(out, 0.35)).setY(0.12).normalize();
       }
     }
-    if (mode === 'space') this.spaceAz = Math.atan2(this.cam.position.z, this.cam.position.x);
+    // Back out to the angle you're at; the distance and height you left open space with stay as they were.
+    if (mode === 'space') { this.s.az = Math.atan2(this.cam.position.z, this.cam.position.x); this.s.vAz = this.s.vEl = 0; this.s.idle = 0; }
     const dur = (prev === 'space') !== (mode === 'space') ? 1.7 : 1.15;
     const to = this.desired({ pos: new THREE.Vector3(), target: new THREE.Vector3() });
     this.flight = { from, t: 0, dur, lift: Math.min(40, from.pos.distanceTo(to.pos) * 0.14) };
     this.arrived = 0;
   }
 
-  /** Drag in the kingdom view: azimuth and elevation. */
+  private get orbit(): Orbit | null { return this.mode === 'space' ? this.s : this.mode === 'kingdom' ? this.k : null; }
+
+  /** Drag in open space or a kingdom: turn round it (azimuth and elevation). */
   drag(dx: number, dy: number) {
-    if (this.mode !== 'kingdom' || this.flight) return;
-    this.k.az += dx * 0.005;
-    this.k.el = THREE.MathUtils.clamp(this.k.el + dy * 0.004, K_ELMIN, K_ELMAX);
-    this.k.idle = 0;
+    const o = this.orbit;
+    if (!o || this.flight) return;
+    // Open space is wider, so the same drag turns it a little less.
+    const k = this.mode === 'space' ? 0.7 : 1, dAz = dx * 0.005 * k, dEl = dy * 0.004 * k;
+    o.az += dAz;
+    o.el = THREE.MathUtils.clamp(o.el + dEl, o.elMin, o.elMax);
+    // The throw: how fast the last few moves were going.
+    const now = performance.now(), dt = Math.max(0.008, Math.min(0.1, (now - this.lastDrag) / 1000));
+    this.lastDrag = now;
+    o.vAz += (dAz / dt - o.vAz) * 0.6; o.vEl += (dEl / dt - o.vEl) * 0.6;
+    o.held = true; o.idle = 0;
+  }
+  /** The finger or button came up: whatever speed the drag had carries on and eases out. */
+  release() {
+    for (const o of [this.s, this.k]) {
+      if (!o.held) continue;
+      o.held = false;
+      // Held still before letting go: no throw.
+      if (performance.now() - this.lastDrag > 80) o.vAz = o.vEl = 0;
+    }
   }
   zoom(dy: number) {
-    if (this.mode !== 'kingdom') return;
-    this.k.r = THREE.MathUtils.clamp(this.k.r * Math.exp(dy * 0.0012), K_RMIN, K_RMAX);
-    this.k.idle = 0;
+    const o = this.orbit;
+    if (!o) return;
+    o.r = THREE.MathUtils.clamp(o.r * Math.exp(dy * 0.0012), o.rMin, o.rMax);
+    o.idle = 0;
+  }
+  private coast(o: Orbit, dt: number) {
+    if (o.held || this.flight) return;
+    o.az += o.vAz * dt;
+    o.el = THREE.MathUtils.clamp(o.el + o.vEl * dt, o.elMin, o.elMax);
+    const f = Math.exp(-dt * 3.2);
+    o.vAz *= f; o.vEl *= f;
   }
 
   private desired(out: Pose): Pose {
     if (this.mode === 'space' || !this.nebula) {
-      out.pos.set(Math.cos(this.spaceAz) * Math.cos(SPACE_EL) * SPACE_R, Math.sin(SPACE_EL) * SPACE_R, Math.sin(this.spaceAz) * Math.cos(SPACE_EL) * SPACE_R);
+      const { az, el, r } = this.s;
+      out.pos.set(Math.cos(az) * Math.cos(el) * r, Math.sin(el) * r, Math.sin(az) * Math.cos(el) * r);
       out.target.set(0, 0, 0);
       return out;
     }
@@ -120,10 +151,11 @@ export class CameraRig {
 
   update(dt: number, t: number) {
     this.time = t;
-    if (this.mode === 'space') this.spaceAz += SPACE_SPIN * dt;
-    if (this.mode === 'kingdom') {
-      this.k.idle += dt;
-      if (this.k.idle > IDLE) this.k.az += K_SPIN * dt * Math.min(1, (this.k.idle - IDLE) / 2);
+    const o = this.orbit;
+    if (o) {
+      this.coast(o, dt);
+      if (!o.held) o.idle += dt;
+      if (o.idle > IDLE) o.az += (o === this.s ? SPACE_SPIN : K_SPIN) * dt * Math.min(1, (o.idle - IDLE) / 2);
     }
     this.desired(this.pose);
     const f = this.flight;

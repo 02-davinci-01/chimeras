@@ -1,0 +1,31 @@
+{
+  "id": "madvillainy",
+  "title": "Madvillainy",
+  "artist": "Madvillain",
+  "year": 2004,
+  "spotify": "19bQiwEKhXUBJWY6oV3KZk",
+  "cover": "https://i.scdn.co/image/ab67616d0000b2733e3bb917af94bd82074c5d47",
+  "kingdom": "hiphop",
+  "logseq": {
+    "page": "Madvillainy"
+  },
+  "added": "2026-10-02",
+  "first": "2022-07-09",
+  "pack": null,
+  "person": {
+    "brief": "[Vedant's description goes here]",
+    "base": "hiphop",
+    "head": "default",
+    "traits": [
+      "nod"
+    ],
+    "motion": {
+      "gait": "stride",
+      "tempo": 0.8,
+      "bpm": 90
+    },
+    "colours": {
+      "body": "palette:0"
+    }
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "id": "yeezus",
+  "title": "Yeezus",
+  "artist": "Kanye West",
+  "year": 2013,
+  "spotify": "7D2NdGvBHIavgLhmcwhluK",
+  "cover": "https://i.scdn.co/image/ab67616d0000b2731dacfbc31cc873d132958af9",
+  "kingdom": "hiphop",
+  "logseq": {
+    "page": "Yeezus"
+  },
+  "added": "2026-10-03",
+  "first": "2022-10-14",
+  "pack": null,
+  "person": {
+    "brief": "",
+    "base": "hiphop",
+    "traits": []
+  }
+}

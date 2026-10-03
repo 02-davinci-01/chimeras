@@ -1,0 +1,16 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- Dev-only harness: the shared card component rendering design/card-reference.html's data, for a pixel diff. -->
+<title>Card harness</title>
+<style>body{margin:0;background:var(--ground);font-family:var(--sans);color:var(--ink)}main{padding:56px;display:flex;flex-direction:column;gap:28px}
+h2{font:600 13px var(--sans);color:var(--muted);margin:0}.row{display:flex;gap:36px;flex-wrap:wrap;align-items:flex-start}
+.lg{display:inline-flex;align-items:center;gap:7px;font:700 13px var(--sans);margin-right:24px}</style></head>
+<body><main>
+<h2>Front, one per kingdom (finish follows rarity: divine sheen, rare holo border, elite etched border, special foil title)</h2>
+<div class="row" id="fronts"></div>
+<h2>Back of an open card, and a sealed card</h2>
+<div class="row" id="backs"></div>
+<h2>Unrated and common (not in the reference)</h2>
+<div class="row" id="extra"></div>
+</main>
+<script type="module" src="./main.ts"></script>
+</body></html>

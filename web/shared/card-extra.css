@@ -1,0 +1,29 @@
+/* Additions to the reference card (card.css stays byte-for-byte the design contract).
+   Nothing here changes a resting reference card at 1×; it covers long titles, empty reviews, flipping and motion. */
+
+/* Long titles wrap into a second column early, so the pen date and the foot keep their room. */
+.obi-title.long{max-height:150px}
+.obi-title.longer{max-height:150px;font-size:15px}
+.excerpt.empty{color:var(--muted);font-style:italic}
+
+/* Card motion: quiet lift and a soft halo in the kingdom colour. */
+.card{transition:transform .35s cubic-bezier(.2,.7,.2,1),box-shadow .35s cubic-bezier(.2,.7,.2,1),opacity .3s ease}
+.card .art img{transition:filter .4s ease}
+.card .review-link{transition:border-color .2s ease,color .2s ease}
+.card .review-link:hover{color:color-mix(in srgb,var(--k) 55%,var(--ink))}
+
+/* Flipper: two faces back to back. */
+.flipper{position:relative;width:280px;height:392px;transform-style:preserve-3d;transition:transform .6s cubic-bezier(.45,.05,.25,1)}
+.flipper .face{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden}
+.flipper .face-back{transform:rotateY(180deg)}
+.flipper.flipped{transform:rotateY(180deg)}
+
+/* Enlarged divine cards loop their sheen slowly (static with reduced motion, per card.css). */
+@media (prefers-reduced-motion:no-preference){
+  .enlarged .card.f-sheen::after{animation:sheen 4.8s ease-in-out infinite}
+}
+
+/* Reveal: the pen date writes itself in, left to right as you read it (top to bottom on the strip). */
+@keyframes pen-write{from{clip-path:inset(0 0 100% 0)}to{clip-path:inset(0 0 0 0)}}
+.card.writing .obi-date{animation:pen-write .6s cubic-bezier(.5,0,.3,1) both}
+@media (prefers-reduced-motion:reduce){.card.writing .obi-date{animation:none}.flipper{transition:none}}

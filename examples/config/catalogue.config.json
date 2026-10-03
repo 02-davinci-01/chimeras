@@ -1,0 +1,6 @@
+{
+  "$comment": "Fixture config: builds the five example albums against examples/logseq. Kingdoms and rarity fall back to the repo's config/.",
+  "logseq": { "graphPath": "logseq", "graphName": "music", "mode": "file" },
+  "server": { "host": "127.0.0.1", "port": 5175 },
+  "art": { "pixelGrid": 32, "pixelColours": 8, "abstractSize": 640, "coverSize": 640 }
+}

@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Weekly pack (packs/<week>.json)",
+  "type": "object",
+  "required": [
+    "week",
+    "made",
+    "albums"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "week": {
+      "type": "string",
+      "pattern": "^\\d{4}-W\\d{2}$"
+    },
+    "made": {
+      "type": "string",
+      "format": "date"
+    },
+    "note": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "albums": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 4,
+      "items": {
+        "type": "string",
+        "description": "Album ids."
+      }
+    }
+  }
+}

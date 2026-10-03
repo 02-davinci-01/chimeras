@@ -1,0 +1,25 @@
+{
+  "logseq": {
+    "graphPath": "/Users/02-davinci-01/Documents/veridis-quo_",
+    "graphName": "veridis-quo_",
+    "mode": "file",
+    "api": {
+      "url": "http://127.0.0.1:12315/api",
+      "tokenEnv": "LOGSEQ_API_TOKEN"
+    }
+  },
+  "server": {
+    "host": "127.0.0.1",
+    "port": 5174
+  },
+  "art": {
+    "pixelGrid": 32,
+    "pixelColours": 8,
+    "abstractSize": 640,
+    "coverSize": 640
+  },
+  "binder": {
+    "cardWidth": 280,
+    "cardHeight": 392
+  }
+}

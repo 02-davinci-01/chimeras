@@ -1,0 +1,83 @@
+{
+  "$comment": "Order is display order. colour = border + obi strip; ink = text on the strip; mark = abstract-art style; body = base body plan in the world; tags only suggest a kingdom, the album's own `kingdom` field decides.",
+  "kingdoms": [
+    {
+      "key": "rock",
+      "name": "Rock",
+      "colour": "#2D4B8E",
+      "ink": "#FFFFFF",
+      "mark": "smear",
+      "body": "rock",
+      "tags": [
+        "rock",
+        "art rock",
+        "post-rock",
+        "shoegaze",
+        "dream pop",
+        "noise rock",
+        "post-punk",
+        "alternative rock",
+        "grunge",
+        "prog rock"
+      ]
+    },
+    {
+      "key": "electronic",
+      "name": "Electronic",
+      "colour": "#8C8F94",
+      "ink": "#141516",
+      "mark": "grid",
+      "body": "electronic",
+      "tags": [
+        "electronic",
+        "idm",
+        "ambient",
+        "drone",
+        "minimalism",
+        "modern classical",
+        "techno",
+        "house",
+        "french house",
+        "glitch",
+        "jazz",
+        "spiritual jazz"
+      ]
+    },
+    {
+      "key": "hiphop",
+      "name": "Hip-hop",
+      "colour": "#C62F2B",
+      "ink": "#FFFFFF",
+      "mark": "halftone",
+      "body": "hiphop",
+      "tags": [
+        "hip hop",
+        "rap",
+        "abstract hip hop",
+        "trap",
+        "r&b"
+      ]
+    },
+    {
+      "key": "indie",
+      "name": "Indie",
+      "colour": "#F0CF3A",
+      "ink": "#1E1A05",
+      "mark": "strings",
+      "body": "indie",
+      "tags": [
+        "indie",
+        "indie rock",
+        "indie folk",
+        "indie pop",
+        "folk",
+        "psych folk",
+        "folktronica",
+        "singer-songwriter",
+        "pop",
+        "art pop",
+        "bedroom pop"
+      ]
+    }
+  ]
+}

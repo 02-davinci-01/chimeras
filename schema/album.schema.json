@@ -1,0 +1,182 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "album.schema.json",
+  "title": "Album entry (albums/<id>.json)",
+  "type": "object",
+  "required": [
+    "id",
+    "title",
+    "artist",
+    "year",
+    "kingdom",
+    "logseq",
+    "added"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+      "description": "Slug, stable forever; also the file name."
+    },
+    "title": {
+      "type": "string"
+    },
+    "artist": {
+      "type": "string"
+    },
+    "year": {
+      "type": "integer"
+    },
+    "spotify": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Spotify album id."
+    },
+    "cover": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "640 px cover URL from Spotify; downloaded once by the build."
+    },
+    "runtime": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "description": "Minutes, optional."
+    },
+    "kingdom": {
+      "enum": [
+        "rock",
+        "electronic",
+        "hiphop",
+        "indie"
+      ]
+    },
+    "logseq": {
+      "type": "object",
+      "required": [
+        "page"
+      ],
+      "properties": {
+        "page": {
+          "type": "string",
+          "description": "Exact Logseq page name."
+        }
+      },
+      "additionalProperties": false
+    },
+    "added": {
+      "type": "string",
+      "format": "date",
+      "description": "Day the entry was created. Sets the card number order."
+    },
+    "first": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date",
+      "description": "Day Vedant first listened. Hand-written on the obi strip. Null while sealed."
+    },
+    "pack": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^\\d{4}-W\\d{2}$",
+      "description": "ISO week of the pack it came in, if any."
+    },
+    "person": {
+      "$ref": "#/$defs/person"
+    }
+  },
+  "$defs": {
+    "person": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "brief": {
+          "type": "string",
+          "description": "Vedant's own words, verbatim. Source of truth for the person."
+        },
+        "base": {
+          "enum": [
+            "rock",
+            "electronic",
+            "hiphop",
+            "indie"
+          ],
+          "description": "Defaults to the album's kingdom."
+        },
+        "build": {
+          "type": "object",
+          "properties": {
+            "height": {
+              "type": "number",
+              "minimum": 0.6,
+              "maximum": 1.8,
+              "default": 1
+            },
+            "mass": {
+              "type": "number",
+              "minimum": 0.5,
+              "maximum": 1.8,
+              "default": 1
+            }
+          },
+          "additionalProperties": false
+        },
+        "head": {
+          "type": "string",
+          "description": "Head module name: default, static, faceless, cover, skull, cube."
+        },
+        "traits": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Trait module names, applied in order."
+        },
+        "motion": {
+          "type": "object",
+          "properties": {
+            "gait": {
+              "enum": [
+                "walk",
+                "shuffle",
+                "stride",
+                "drift",
+                "hop",
+                "still"
+              ]
+            },
+            "tempo": {
+              "type": "number",
+              "default": 1
+            },
+            "bpm": {
+              "type": [
+                "number",
+                "null"
+              ]
+            }
+          },
+          "additionalProperties": false
+        },
+        "colours": {
+          "type": "object",
+          "description": "Values are palette:N (index into the cover's 8-colour palette, by share) or a hex.",
+          "additionalProperties": {
+            "type": "string",
+            "pattern": "^(palette:[0-7]|#[0-9A-Fa-f]{6})$"
+          }
+        }
+      }
+    }
+  }
+}

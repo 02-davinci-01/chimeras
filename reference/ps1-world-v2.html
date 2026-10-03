@@ -1,0 +1,307 @@
+<!-- REFERENCE ONLY: v2 prototype. Keep the PS1 renderer (low-res render target, ps1() vertex-snap + 15-bit colour shader patch, Lambert, fog, NearestFilter textures) and the body-plan builders as a starting point. Its WASD navigation, ground plane and 5-kingdom layout are OBSOLETE: see SPEC.md section 10. Expects catalogue.js + cover-art.js beside it. -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Kingdoms</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=JetBrains+Mono&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="catalogue.js"></script>
+<script src="cover-art.js"></script>
+<style>
+:root{--ink:#e3e6ec;--soft:#8a93a1;--steel:#6d8fb5;--aurum:#c9a54e}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden;background:#000;color:var(--ink);font:14px/1.5 "IBM Plex Mono",ui-monospace,Menlo,monospace}
+canvas#gl{position:fixed;inset:0;width:100vw;height:100vh;image-rendering:pixelated;cursor:grab;touch-action:none}
+canvas#gl.drag{cursor:grabbing}
+.hud{position:fixed;pointer-events:none;text-shadow:0 1px 0 #000}
+#where{left:max(20px,env(safe-area-inset-left));bottom:max(20px,env(safe-area-inset-bottom));max-width:min(46ch,70vw)}
+#where b{font-weight:500;font-size:17px;display:block;color:var(--ink)}
+#where span{color:var(--soft)}
+#help{right:20px;bottom:max(20px,env(safe-area-inset-bottom));font:12px "JetBrains Mono",monospace;color:var(--soft);text-align:right}
+#map{position:fixed;right:20px;top:max(20px,env(safe-area-inset-top));width:132px;height:132px;cursor:pointer;image-rendering:pixelated}
+#card{position:fixed;left:max(20px,env(safe-area-inset-left));top:max(20px,env(safe-area-inset-top));display:none;background:#000c;border:1px solid #232b38;padding:14px 16px;max-width:300px}
+#card b{font-weight:500;display:block}
+#card small{color:var(--soft);display:block;margin-bottom:8px}
+#card a{color:var(--aurum);text-decoration:none;margin-right:14px}
+#card a:hover,#card a:focus-visible{text-decoration:underline}
+#card button{position:absolute;right:8px;top:6px;background:none;border:0;color:var(--soft);font:inherit;cursor:pointer}
+#err{position:fixed;inset:0;display:none;place-items:center;padding:24px;text-align:center;color:var(--soft)}
+#walk{position:fixed;right:20px;bottom:90px;width:64px;height:64px;border:1px solid #39424f;background:#0008;color:var(--ink);font:inherit;display:none}
+@media (pointer:coarse){#walk{display:block}#help{display:none}}
+</style>
+</head>
+<body>
+<canvas id="gl" aria-label="Kingdoms world"></canvas>
+<div id="where" class="hud" aria-live="polite"></div>
+<div id="help" class="hud">WASD to move, drag to look<br>scroll to rise, 1–5 to travel<br>click a cover</div>
+<canvas id="map" width="132" height="132" aria-label="Map. Click a kingdom to travel there."></canvas>
+<div id="card" role="dialog" aria-label="Album"><button aria-label="Close">esc</button><div id="cardBody"></div></div>
+<button id="walk" aria-label="Walk forward">walk</button>
+<div id="err">The world needs three.js from cdnjs. Check the connection and reload.</div>
+<script>
+if (!window.THREE) { document.getElementById('err').style.display = 'grid'; throw new Error('three missing'); }
+const C = window.CATALOGUE, K = C.kingdoms, V3 = THREE.Vector3, TAU = Math.PI * 2;
+const R_WORLD = 54, R_KING = 20;
+
+/* ---------- PS1 renderer: low resolution, snapped vertices, 15-bit colour ---------- */
+const cv = document.getElementById('gl');
+const renderer = new THREE.WebGLRenderer({ canvas: cv, antialias: false });
+renderer.setPixelRatio(1);
+const scene = new THREE.Scene();
+const BASE_FOG = new THREE.Color(0x05070b);
+scene.background = BASE_FOG.clone(); scene.fog = new THREE.Fog(BASE_FOG.clone(), 6, 48);
+const camera = new THREE.PerspectiveCamera(68, 1, 0.1, 200);
+const SNAP = { value: new THREE.Vector2(160, 120) };
+function ps1(sh) {
+  sh.uniforms.uSnap = SNAP;
+  sh.vertexShader = 'uniform vec2 uSnap;\n' + sh.vertexShader.replace('#include <project_vertex>',
+    '#include <project_vertex>\n vec4 sp = gl_Position; sp.xy = floor(sp.xy / sp.w * uSnap + 0.5) / uSnap * sp.w; gl_Position = sp;');
+  sh.fragmentShader = sh.fragmentShader.replace('#include <dithering_fragment>',
+    '#include <dithering_fragment>\n gl_FragColor.rgb = floor(gl_FragColor.rgb * 31.0 + 0.5) / 31.0;');
+}
+const lam = p => { const m = new THREE.MeshLambertMaterial(p); m.onBeforeCompile = ps1; return m; };
+const bas = p => { const m = new THREE.MeshBasicMaterial(p); m.onBeforeCompile = ps1; return m; };
+function resize() {
+  const scale = Math.max(1, innerHeight / 240), w = Math.round(innerWidth / scale), h = Math.round(innerHeight / scale);
+  renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix(); SNAP.value.set(w / 2, h / 2);
+}
+addEventListener('resize', resize); resize();
+
+scene.add(new THREE.AmbientLight(0x8890a0, 0.75));
+const sun = new THREE.DirectionalLight(0xfff2dd, 0.7); sun.position.set(20, 40, 10); scene.add(sun);
+const floor = new THREE.Mesh(new THREE.PlaneGeometry(400, 400, 1, 1), lam({ color: 0x0b0e13 }));
+floor.rotation.x = -Math.PI / 2; scene.add(floor);
+
+/* ---------- helpers ---------- */
+const box = (w, h, d, m) => new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m);
+function limb(w, h, d, m) { const g = new THREE.Group(), b = box(w, h, d, m); b.position.y = -h / 2; g.add(b); return g; }
+function randIn(k, rMax = R_KING - 4) { const a = Math.random() * TAU, r = Math.sqrt(Math.random()) * rMax; return new V3(k.pos.x + Math.cos(a) * r, 0, k.pos.z + Math.sin(a) * r); }
+function wander(k, speed, pauseMax) {
+  const s = { k, pos: randIn(k), target: randIn(k), speed, pause: Math.random() * 2, heading: Math.random() * TAU, moving: false };
+  s.step = dt => {
+    if (s.pause > 0) { s.pause -= dt; s.moving = false; return; }
+    const d = s.target.clone().sub(s.pos); const L = d.length();
+    if (L < 0.2) { s.target = randIn(k); s.pause = 0.5 + Math.random() * pauseMax; s.moving = false; return; }
+    d.multiplyScalar(Math.min(L, speed * dt) / L); s.pos.add(d); s.heading = Math.atan2(d.x, d.z); s.moving = true;
+  };
+  return s;
+}
+const people = [];
+
+/* Shoegaze faces share one constant-static texture. */
+const staticCv = document.createElement('canvas'); staticCv.width = 12; staticCv.height = 14;
+const staticTex = new THREE.CanvasTexture(staticCv); staticTex.magFilter = staticTex.minFilter = THREE.NearestFilter; staticTex.generateMipmaps = false;
+function tickStatic() { const x = staticCv.getContext('2d'), o = x.createImageData(12, 14); for (let i = 0; i < 168; i++) { const v = Math.random() * 255; o.data.set([v, v, v, 255], i * 4); } x.putImageData(o, 0, 0); staticTex.needsUpdate = true; }
+
+/* ---------- inhabitants, one body plan per kingdom ---------- */
+const BODIES = {
+  ambient(k, cloth) {
+    const g = new THREE.Group(), m = lam({ color: cloth, transparent: true, opacity: 0.55 });
+    const body = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.34, 3.4, 5), m); body.position.y = 1.7; g.add(body);
+    const head = new THREE.Mesh(new THREE.IcosahedronGeometry(0.3, 0), m); head.position.y = 3.65; g.add(head);
+    const s = wander(k, 0.22, 9), ph = Math.random() * TAU;
+    return { g, s, mats: [m], update(t) { g.position.y = 0.35 + Math.sin(t * 0.5 + ph) * 0.15; g.scale.y = 1 + Math.sin(t * 0.6 + ph) * 0.04; g.rotation.y = Math.atan2(k.pos.x - s.pos.x, k.pos.z - s.pos.z); } };
+  },
+  shoegaze(k, cloth) {
+    const g = new THREE.Group(), m = lam({ color: cloth }), skin = lam({ color: 0x2a2730 });
+    const torso = box(0.7, 1.05, 0.4, m); torso.position.y = 1.35; g.add(torso);
+    const legs = [-0.18, 0.18].map(x => { const l = limb(0.22, 0.82, 0.22, skin); l.position.set(x, 0.82, 0); g.add(l); return l; });
+    const arms = [-0.46, 0.46].map(x => { const a = limb(0.17, 0.85, 0.17, m); a.position.set(x, 1.82, 0); g.add(a); return a; });
+    const head = new THREE.Group(); head.position.y = 1.9;
+    const hm = [skin, skin, skin, skin, bas({ map: staticTex }), skin];
+    const h = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.56, 0.48), hm); h.position.y = 0.3; head.add(h); head.rotation.x = 0.55; g.add(head);
+    const s = wander(k, 0.55, 4), ph = Math.random() * TAU;
+    return { g, s, mats: [m], update(t) { const w = s.moving ? Math.sin(t * 4 + ph) * 0.3 : 0; legs[0].rotation.x = w; legs[1].rotation.x = -w; arms[0].rotation.x = -w * 0.5; arms[1].rotation.x = w * 0.5; head.rotation.z = Math.sin(t * 0.7 + ph) * 0.08; } };
+  },
+  acoustic(k, cloth) {
+    const g = new THREE.Group(), bone = lam({ color: 0xd9cfb6 }), T = 0.07;
+    const spine = box(T, 1.0, T, bone); spine.position.y = 1.45; g.add(spine);
+    const sh = box(0.72, T, T, bone); sh.position.y = 1.92; g.add(sh);
+    const hip = box(0.44, T, T, bone); hip.position.y = 0.96; g.add(hip);
+    [1.76, 1.62, 1.48].forEach((y, i) => { const r = box(0.44 - i * 0.06, T * 0.8, T, bone); r.position.y = y; g.add(r); });
+    const legs = [-0.2, 0.2].map(x => { const l = limb(T, 0.95, T, bone); l.position.set(x, 0.96, 0); g.add(l); return l; });
+    const arms = [-0.36, 0.36].map(x => { const a = limb(T, 0.82, T, bone); a.position.set(x, 1.92, 0); g.add(a); return a; });
+    const head = new THREE.Mesh(new THREE.IcosahedronGeometry(0.27, 0), bas({ color: 0xd9cfb6, wireframe: true })); head.position.y = 2.28; g.add(head);
+    const s = wander(k, 0.9, 3), ph = Math.random() * TAU;
+    return { g, s, mats: [], update(t) { const w = s.moving ? Math.sin(t * 5 + ph) * 0.5 : 0; legs[0].rotation.x = w; legs[1].rotation.x = -w; arms[0].rotation.x = -w * 0.7; arms[1].rotation.x = w * 0.7; } };
+  },
+  electronic(k, cloth) {
+    const g = new THREE.Group(), m = lam({ color: cloth }), dark = lam({ color: 0x15181f }), S = 0.3, cubes = [];
+    const add = (x, y, mat, s = S) => { const c = box(s * 0.94, s * 0.94, s * 0.94, mat); c.position.set(x, y, 0); c.userData.home = c.position.clone(); g.add(c); cubes.push(c); return c; };
+    [-0.15, 0.15].forEach(x => { add(x, 0.15, dark); add(x, 0.45, dark); [0.75, 1.05, 1.35].forEach(y => add(x, y, m)); });
+    [-0.45, 0.45].forEach(x => { add(x, 1.05, m); add(x, 1.35, m); });
+    const head = add(0, 1.78, m, 0.46);
+    const s = { k, pos: randIn(k).round(), heading: 0, moving: false, step() {} };
+    let clock = Math.random(), hop = Math.random() * 0.5, target = randIn(k).round();
+    return { g, s, mats: [m], update(t, dt) {
+      clock += dt; hop += dt;
+      if (clock > 0.14) { clock = 0; cubes.forEach(c => c.position.copy(c.userData.home)); for (let i = 0; i < 2; i++) { const c = cubes[(Math.random() * cubes.length) | 0]; c.position.x += (Math.random() < 0.5 ? -1 : 1) * 0.15; c.position.z += (Math.random() < 0.5 ? -1 : 1) * 0.15; } }
+      if (Math.random() < dt * 0.6) head.rotation.y += Math.PI / 2;
+      if (hop > 0.45) { hop = 0;
+        const dx = target.x - s.pos.x, dz = target.z - s.pos.z;
+        if (Math.abs(dx) < 1 && Math.abs(dz) < 1) target = randIn(k).round();
+        else if (Math.abs(dx) >= 1) { s.pos.x += Math.sign(dx); s.heading = Math.sign(dx) * Math.PI / 2; }
+        else { s.pos.z += Math.sign(dz); s.heading = dz > 0 ? 0 : Math.PI; }
+      }
+    } };
+  },
+  hiphop(k, cloth) {
+    const g = new THREE.Group(), m = lam({ color: cloth }), skin = lam({ color: 0x3a2a24 }), dark = lam({ color: 0x0c0c0e });
+    const legs = [-0.3, 0.3].map(x => { const l = limb(0.4, 0.62, 0.4, dark); l.position.set(x, 0.62, 0); g.add(l); return l; });
+    const torso = box(1.32, 1.1, 0.78, m); torso.position.y = 1.17; g.add(torso);
+    const arms = [-0.84, 0.84].map(x => { const a = limb(0.34, 0.92, 0.34, m); a.position.set(x, 1.66, 0); g.add(a); return a; });
+    const head = new THREE.Group(); head.position.y = 1.74;
+    const h = box(0.62, 0.62, 0.62, skin); h.position.y = 0.33; head.add(h);
+    const band = box(0.64, 0.14, 0.06, dark); band.position.set(0, 0.4, 0.31); head.add(band); g.add(head);
+    const s = wander(k, 0.75, 4), ph = Math.random();
+    return { g, s, mats: [m], update(t) {
+      head.rotation.x = -Math.abs(Math.sin((t + ph) * Math.PI * 1.5)) * 0.32; // 90 bpm
+      const w = s.moving ? Math.sin(t * 3 + ph) * 0.28 : 0; legs[0].rotation.x = w; legs[1].rotation.x = -w; torso.rotation.z = w * 0.12;
+    } };
+  }
+};
+
+/* ---------- kingdoms ---------- */
+const slabs = [];
+K.forEach((k, i) => {
+  const a = i / K.length * TAU - Math.PI / 2;
+  k.pos = new V3(Math.cos(a) * R_WORLD, 0, Math.sin(a) * R_WORLD);
+  k.tint = new THREE.Color(k.color); k.palette = [];
+  k.ground = lam({ color: k.tint.clone().multiplyScalar(0.45) });
+  const disc = new THREE.Mesh(new THREE.CircleGeometry(R_KING, 9), k.ground); disc.rotation.x = -Math.PI / 2; disc.position.set(k.pos.x, 0.02, k.pos.z); scene.add(disc);
+  k.albums = C.albums.filter(al => ART.kingdomOf(al, K) === k);
+  k.albums.forEach((al, j) => {
+    const ang = a + (j - (k.albums.length - 1) / 2) * 0.75, p = new V3(k.pos.x + Math.cos(ang) * 8, 0, k.pos.z + Math.sin(ang) * 8);
+    const ph = document.createElement('canvas'); ph.width = ph.height = 8; const px = ph.getContext('2d'); px.fillStyle = '#1b2029'; px.fillRect(0, 0, 8, 8);
+    const tex = new THREE.CanvasTexture(ph); tex.magFilter = tex.minFilter = THREE.NearestFilter; tex.generateMipmaps = false;
+    const edge = lam({ color: 0x1a1f28 }), front = bas({ map: tex });
+    const slab = new THREE.Mesh(new THREE.BoxGeometry(3, 3, 0.22), [edge, edge, edge, edge, front, front]);
+    slab.position.set(p.x, 2.7, p.z); slab.lookAt(k.pos.x, 2.7, k.pos.z); slab.userData = { album: al, k, base: 2.7, ph: Math.random() * TAU };
+    const plinth = box(0.5, 1.2, 0.5, edge); plinth.position.set(p.x, 0.6, p.z);
+    scene.add(slab, plinth); slabs.push(slab);
+    ART.process(al, { kingdom: k }).then(r => {
+      tex.image = r.pixel; tex.needsUpdate = true; k.palette.push(...r.palette.slice(0, 3)); repaint(k);
+    }).catch(() => { px.fillStyle = '#3a2f22'; px.fillRect(2, 2, 4, 4); tex.needsUpdate = true; });
+  });
+  for (let n = 0; n < 6; n++) {
+    const p = BODIES[k.key] ? BODIES[k.key](k, k.tint.clone()) : BODIES.shoegaze(k, k.tint.clone());
+    p.k = k; p.g.position.copy(p.s.pos); scene.add(p.g); people.push(p);
+  }
+});
+// Once covers are read, the kingdom's ground and clothes take the covers' own colours.
+function repaint(k) {
+  if (!k.palette.length) return;
+  const mix = new THREE.Color(0, 0, 0); k.palette.forEach(h => mix.add(new THREE.Color(h))); mix.multiplyScalar(1 / k.palette.length);
+  k.tint.copy(mix); k.ground.color.copy(mix).multiplyScalar(0.4);
+  people.filter(p => p.k === k).forEach((p, i) => p.mats.forEach(m => m.color.set(k.palette[i % k.palette.length])));
+}
+
+/* ---------- movement ---------- */
+const me = { pos: new V3(), yaw: 0, pitch: -0.12, travel: null };
+const keys = new Set();
+addEventListener('keydown', e => {
+  if (e.target.closest && e.target.closest('a,button')) return;
+  keys.add(e.code);
+  if (/^Digit[1-9]$/.test(e.code)) { const k = K[+e.code.slice(5) - 1]; if (k) travelTo(k); }
+  if (e.code === 'Escape') closeCard();
+});
+addEventListener('keyup', e => keys.delete(e.code));
+addEventListener('blur', () => keys.clear());
+addEventListener('wheel', e => { me.pos.y = Math.min(30, Math.max(1.6, me.pos.y + e.deltaY * 0.01)); }, { passive: true });
+let drag = null;
+cv.addEventListener('pointerdown', e => { drag = { x: e.clientX, y: e.clientY, moved: 0 }; cv.setPointerCapture(e.pointerId); cv.classList.add('drag'); });
+cv.addEventListener('pointermove', e => {
+  if (!drag) return; const dx = e.clientX - drag.x, dy = e.clientY - drag.y; drag.moved += Math.abs(dx) + Math.abs(dy); drag.x = e.clientX; drag.y = e.clientY;
+  me.yaw -= dx * 0.005; me.pitch = Math.min(1.2, Math.max(-1.2, me.pitch - dy * 0.004)); me.travel = null;
+});
+cv.addEventListener('pointerup', e => { cv.classList.remove('drag'); if (drag && drag.moved < 5) pick(e); drag = null; });
+let walking = false; const wb = document.getElementById('walk');
+wb.addEventListener('pointerdown', () => walking = true); ['pointerup', 'pointerleave', 'pointercancel'].forEach(t => wb.addEventListener(t, () => walking = false));
+
+function travelTo(k) {
+  const out = k.pos.clone().normalize(), to = k.pos.clone().sub(out.clone().multiplyScalar(R_KING - 9)); to.y = 3;
+  const d = k.pos.clone().sub(to);
+  me.travel = { from: me.pos.clone(), to, yaw0: me.yaw, yaw1: me.yaw + wrap(Math.atan2(-d.x, -d.z) - me.yaw), p0: me.pitch, t: 0 };
+}
+const wrap = a => Math.atan2(Math.sin(a), Math.cos(a));
+
+/* ---------- picking a cover ---------- */
+const ray = new THREE.Raycaster(), ndc = new THREE.Vector2();
+const card = document.getElementById('card'), cardBody = document.getElementById('cardBody');
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+function pick(e) {
+  const r = cv.getBoundingClientRect(); ndc.set((e.clientX - r.left) / r.width * 2 - 1, -(e.clientY - r.top) / r.height * 2 + 1);
+  ray.setFromCamera(ndc, camera); const hit = ray.intersectObjects(slabs)[0];
+  if (!hit) return closeCard();
+  const { album: a, k } = hit.object.userData, graph = C.logseq && C.logseq.graph;
+  cardBody.innerHTML = `<b>${esc(a.title)}</b><small>${esc(a.artist)}, ${a.year}. ${esc(k.name)}.</small>
+    <a href="https://open.spotify.com/album/${esc(a.spotify)}" target="_blank" rel="noopener">Spotify</a>${graph ? `<a href="logseq://graph/${encodeURIComponent(graph)}?page=${encodeURIComponent(a.title)}">Logseq page</a>` : ''}`;
+  card.style.display = 'block';
+}
+function closeCard() { card.style.display = 'none'; }
+card.querySelector('button').onclick = closeCard;
+
+/* ---------- HUD ---------- */
+const where = document.getElementById('where'), map = document.getElementById('map'), mx = map.getContext('2d');
+let shownK = null;
+function hud(k) {
+  if (k === shownK) return; shownK = k;
+  where.innerHTML = k ? `<b>${esc(k.name)}</b><span>${esc(k.folk)}</span>` : '<b>Between kingdoms</b><span>Press 1–5 or click the map to travel.</span>';
+}
+function drawMap() {
+  const S = 132, sc = S / (R_WORLD * 2 + R_KING * 2 + 8), o = S / 2;
+  mx.clearRect(0, 0, S, S); mx.fillStyle = '#000a'; mx.fillRect(0, 0, S, S);
+  K.forEach((k, i) => { mx.fillStyle = '#' + k.tint.getHexString(); mx.globalAlpha = k === shownK ? 1 : 0.55; mx.beginPath(); mx.arc(o + k.pos.x * sc, o + k.pos.z * sc, R_KING * sc, 0, TAU); mx.fill(); mx.globalAlpha = 1; mx.fillStyle = '#000'; mx.font = '10px "JetBrains Mono",monospace'; mx.textAlign = 'center'; mx.textBaseline = 'middle'; mx.fillText(i + 1, o + k.pos.x * sc, o + k.pos.z * sc); });
+  const px = o + me.pos.x * sc, pz = o + me.pos.z * sc, fx = -Math.sin(me.yaw), fz = -Math.cos(me.yaw);
+  mx.strokeStyle = '#c9a54e'; mx.lineWidth = 2; mx.beginPath(); mx.moveTo(px, pz); mx.lineTo(px + fx * 9, pz + fz * 9); mx.stroke();
+  mx.fillStyle = '#c9a54e'; mx.fillRect(px - 2, pz - 2, 4, 4);
+}
+map.addEventListener('click', e => {
+  const r = map.getBoundingClientRect(), S = 132, sc = S / (R_WORLD * 2 + R_KING * 2 + 8);
+  const wx = ((e.clientX - r.left) / r.width * S - S / 2) / sc, wz = ((e.clientY - r.top) / r.height * S - S / 2) / sc;
+  const k = K.reduce((a, b) => Math.hypot(b.pos.x - wx, b.pos.z - wz) < Math.hypot(a.pos.x - wx, a.pos.z - wz) ? b : a); travelTo(k);
+});
+
+/* ---------- loop ---------- */
+const start = K.find(k => k.key === 'shoegaze') || K[0];
+travelTo(start); me.pos.copy(me.travel.to); me.yaw = me.travel.yaw1; me.travel = null;
+const fogTarget = new THREE.Color();
+let last = performance.now(), frame = 0;
+function loop(now) {
+  const dt = Math.min(0.05, (now - last) / 1000), t = now / 1000; last = now; frame++;
+  if (frame % 3 === 0) tickStatic();
+  if (me.travel) {
+    const tr = me.travel; tr.t = Math.min(1, tr.t + dt / 1.4); const e = tr.t * tr.t * (3 - 2 * tr.t);
+    me.pos.lerpVectors(tr.from, tr.to, e); me.yaw = tr.yaw0 + (tr.yaw1 - tr.yaw0) * e; me.pitch = tr.p0 + (-0.12 - tr.p0) * e; if (tr.t >= 1) me.travel = null;
+  } else {
+    const f = new V3(-Math.sin(me.yaw), 0, -Math.cos(me.yaw)), rt = new V3(-f.z, 0, f.x), v = new V3();
+    if (keys.has('KeyW') || keys.has('ArrowUp') || walking) v.add(f);
+    if (keys.has('KeyS') || keys.has('ArrowDown')) v.sub(f);
+    if (keys.has('KeyD')) v.add(rt);
+    if (keys.has('KeyA')) v.sub(rt);
+    if (keys.has('ArrowLeft')) me.yaw += dt * 1.8;
+    if (keys.has('ArrowRight')) me.yaw -= dt * 1.8;
+    if (keys.has('KeyE')) me.pos.y = Math.min(30, me.pos.y + dt * 6);
+    if (keys.has('KeyQ')) me.pos.y = Math.max(1.6, me.pos.y - dt * 6);
+    if (v.lengthSq()) me.pos.addScaledVector(v.normalize(), dt * (keys.has('ShiftLeft') ? 16 : 7));
+  }
+  camera.position.copy(me.pos); camera.rotation.order = 'YXZ'; camera.rotation.set(me.pitch, me.yaw, 0);
+
+  for (const p of people) { p.s.step(dt); p.update(t, dt); p.g.position.x = p.s.pos.x; p.g.position.z = p.s.pos.z; if (p.k.key !== 'ambient') p.g.rotation.y = p.s.heading; }
+  for (const s of slabs) s.position.y = s.userData.base + Math.sin(t * 0.8 + s.userData.ph) * 0.12;
+
+  const here = K.find(k => Math.hypot(k.pos.x - me.pos.x, k.pos.z - me.pos.z) < R_KING + 2);
+  hud(here);
+  fogTarget.copy(here ? here.tint : BASE_FOG).multiplyScalar(here ? 0.22 : 1);
+  scene.fog.color.lerp(fogTarget, dt * 1.5); scene.background.copy(scene.fog.color);
+  if (frame % 2 === 0) drawMap();
+  renderer.render(scene, camera);
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>

@@ -1,0 +1,33 @@
+{
+  "id": "promises",
+  "title": "Promises",
+  "artist": "Floating Points, Pharoah Sanders",
+  "year": 2021,
+  "spotify": "3ShtO5VCYa3ctlR5uzLWBa",
+  "cover": "https://i.scdn.co/image/ab67616d0000b2738718f18aca81c2f4961946f4",
+  "kingdom": "electronic",
+  "logseq": {
+    "page": "Promises"
+  },
+  "added": "2026-10-02",
+  "first": "2021-04-02",
+  "pack": null,
+  "person": {
+    "brief": "[Vedant's description goes here]",
+    "base": "electronic",
+    "build": {
+      "height": 1.0,
+      "mass": 1.0
+    },
+    "head": "default",
+    "traits": [],
+    "motion": {
+      "gait": "drift",
+      "tempo": 0.6
+    },
+    "colours": {
+      "body": "palette:0",
+      "accent": "palette:1"
+    }
+  }
+}

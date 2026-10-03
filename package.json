@@ -1,0 +1,32 @@
+{
+  "name": "catalogue",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Vedant's hand-curated RYM: album cards in a binder and album-people in a PS1 world.",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "tsx build/index.ts build",
+    "dev": "tsx build/index.ts dev",
+    "check": "tsx build/index.ts check",
+    "typecheck": "tsc --noEmit",
+    "test": "tsx --test build/logseq/*.test.ts"
+  },
+  "dependencies": {
+    "@napi-rs/canvas": "1.0.10",
+    "ajv": "8.20.0",
+    "ajv-formats": "3.0.1",
+    "chokidar": "5.0.0",
+    "sharp": "0.35.5",
+    "three": "0.186.1"
+  },
+  "devDependencies": {
+    "@types/node": "26.6.4",
+    "@types/three": "0.186.0",
+    "tsx": "4.23.15",
+    "typescript": "7.0.2",
+    "vite": "8.3.2"
+  }
+}

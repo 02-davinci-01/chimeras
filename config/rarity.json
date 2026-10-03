@@ -1,0 +1,52 @@
+{
+  "$comment": "Highest first. First matching rule wins; a `rarity::` property on the Logseq page overrides. Symbols are 24x24 SVG paths, drawn filled in the kingdom colour with a 1.4 #161616 stroke.",
+  "tiers": [
+    {
+      "key": "divine",
+      "name": "Divine",
+      "rule": {
+        "minRating": 10
+      },
+      "finish": "sheen",
+      "symbol": "M12.00 0.50 L13.76 7.75 L20.13 3.87 L16.25 10.24 L23.50 12.00 L16.25 13.76 L20.13 20.13 L13.76 16.25 L12.00 23.50 L10.24 16.25 L3.87 20.13 L7.75 13.76 L0.50 12.00 L7.75 10.24 L3.87 3.87 L10.24 7.75Z"
+    },
+    {
+      "key": "rare",
+      "name": "Rare",
+      "rule": {
+        "minRating": 9
+      },
+      "finish": "holo-border",
+      "symbol": "M12.00 0.50 L14.26 9.74 L23.50 12.00 L14.26 14.26 L12.00 23.50 L9.74 14.26 L0.50 12.00 L9.74 9.74Z"
+    },
+    {
+      "key": "elite",
+      "name": "Elite",
+      "rule": {
+        "minRating": 8
+      },
+      "finish": "etched-border",
+      "symbol": "M3 18 L4.5 7 L9 12 L12 4.5 L15 12 L19.5 7 L21 18 Z"
+    },
+    {
+      "key": "special",
+      "name": "Special",
+      "rule": {
+        "minRating": 7
+      },
+      "finish": "foil-title",
+      "symbol": "M12 2.5 L20 12 L12 21.5 L4 12 Z"
+    },
+    {
+      "key": "common",
+      "name": "Common",
+      "rule": {
+        "minRating": 0
+      },
+      "finish": "matte",
+      "symbol": "M12 7 A5 5 0 1 0 12.01 7 Z"
+    }
+  ],
+  "starPath": "M5.00 0.40 L6.18 3.58 L9.57 3.72 L6.90 5.82 L7.82 9.08 L5.00 7.20 L2.18 9.08 L3.10 5.82 L0.43 3.72 L3.82 3.58Z",
+  "starViewBox": "-0.6 -0.6 11.2 11.2"
+}

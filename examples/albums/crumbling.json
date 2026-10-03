@@ -1,0 +1,28 @@
+{
+  "id": "crumbling",
+  "title": "Crumbling",
+  "artist": "Mid-Air Thief",
+  "year": 2018,
+  "spotify": "4iLo2HykYzbHw6MWSTg4vp",
+  "cover": "https://i.scdn.co/image/ab67616d0000b273ce2eaf6dab7809d9ecf27a9f",
+  "kingdom": "indie",
+  "logseq": {
+    "page": "Crumbling"
+  },
+  "added": "2026-10-02",
+  "first": "2019-12-30",
+  "pack": null,
+  "person": {
+    "brief": "[Vedant's description goes here]",
+    "base": "indie",
+    "head": "default",
+    "traits": [],
+    "motion": {
+      "gait": "shuffle",
+      "tempo": 0.9
+    },
+    "colours": {
+      "body": "palette:0"
+    }
+  }
+}

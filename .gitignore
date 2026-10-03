@@ -1,0 +1,5 @@
+node_modules/
+covers/
+art/
+dist/
+.DS_Store

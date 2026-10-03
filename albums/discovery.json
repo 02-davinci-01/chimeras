@@ -1,0 +1,20 @@
+{
+  "id": "discovery",
+  "title": "Discovery",
+  "artist": "Daft Punk",
+  "year": 2001,
+  "spotify": "2noRn2Aes5aoNVsU6iWThc",
+  "cover": "https://i.scdn.co/image/ab67616d0000b2731e81bff9807a9e629fce5ade",
+  "kingdom": "electronic",
+  "logseq": {
+    "page": "Discovery"
+  },
+  "added": "2026-10-03",
+  "first": "2023-06-17",
+  "pack": null,
+  "person": {
+    "brief": "",
+    "base": "electronic",
+    "traits": []
+  }
+}

@@ -148,6 +148,9 @@ body.world .reader{color-scheme:light}
   .notes,.notes.cramped{display:flex;left:max(12px,calc(50% - 290px));right:max(12px,calc(50% - 290px));top:auto;bottom:max(12px,env(safe-area-inset-bottom));width:auto;padding:14px 16px 16px;
     background:rgba(8,8,12,.78);border:1px solid var(--w-line);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px)}
   .notes::before,.n-meta,.n-seq,.n-excerpt{display:none}
+  /* The sheet has a body of its own here, so it leaves with its lines when the card goes. */
+  .notes{transition:opacity .25s,visibility 0s}
+  .notes:not(.in){opacity:0;visibility:hidden;transition:opacity .25s,visibility 0s .25s}
   .n-label{margin-bottom:8px}
   .n-title,.n-title.long{font-size:26px}
   .n-artist{margin-top:6px;font-size:12px}

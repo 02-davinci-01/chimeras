@@ -228,6 +228,29 @@ export class Builder {
     writeAtomicSync(path.join(dist, 'search.json'), JSON.stringify(out.search) + '\n');
   }
 
+  /**
+   * The public snapshot in site/, committed so a host can serve it without the Logseq graph: the catalogue, the art,
+   * and an empty search index. Previews stream from Apple. The songs in sounds/ stay local (they're whole commercial
+   * tracks), so every scene plays its generative loop. Build warnings stay local too.
+   */
+  async exportSite(cat: Catalogue) {
+    const site = path.join(this.root, 'site');
+    fs.rmSync(site, { recursive: true, force: true });
+    fs.mkdirSync(path.join(site, 'art'), { recursive: true });
+    const albums = await Promise.all(cat.albums.map(async a => {
+      const src = this.albums.get(a.id)!;
+      for (const f of [a.art.cover, a.art.pixel, a.art.abstract]) if (f) fs.copyFileSync(path.join(this.root, f), path.join(site, f));
+      const pv = await this.previews.remote(src);
+      return { ...a, track: pv ? { name: pv.name, no: pv.no, preview: pv.file } : null };
+    }));
+    this.previews.save();
+    const out: Catalogue = { ...cat, sounds: {}, albums, warnings: [] };
+    fs.writeFileSync(path.join(site, 'catalogue.json'), JSON.stringify(out) + '\n');
+    fs.writeFileSync(path.join(site, 'search.json'), '{}\n');
+    const missing = albums.filter(a => a.track && !a.track.preview).map(a => a.id);
+    this.log(`site/: ${albums.length} albums${missing.length ? ` (no Apple preview: ${missing.join(', ')})` : ''}`);
+  }
+
   /** The whole pipeline. */
   async build() {
     this.loadConfig();

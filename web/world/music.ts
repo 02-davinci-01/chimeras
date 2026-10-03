@@ -472,6 +472,8 @@ export class Music {
     let s = this.streams.get(url);
     if (!s) {
       const el = new Audio();
+      // Anonymous CORS, so Apple's previews can feed the Web Audio graph (the level meter) on the public site.
+      el.crossOrigin = 'anonymous';
       el.preload = 'auto'; el.src = url;
       s = { el, gain: null, off: 0 };
       this.streams.set(url, s);

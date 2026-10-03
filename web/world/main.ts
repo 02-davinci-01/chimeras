@@ -218,7 +218,7 @@ function meet(c: Card) {
 }
 /** The album's track preview, if it has one and isn't sealed. */
 function trackOf(a: AlbumOut): Track | null {
-  return a.state !== 'sealed' && a.track?.preview ? { id: a.id, url: `/${a.track.preview}`, name: a.track.name, no: a.track.no } : null;
+  return a.state !== 'sealed' && a.track?.preview ? { id: a.id, url: /^https?:/.test(a.track.preview) ? a.track.preview : `/${a.track.preview}`, name: a.track.name, no: a.track.no } : null;
 }
 function back() {
   if (reader.isOpen) return reader.close();

@@ -1,0 +1,13 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "buildCommand": "npm run build:site",
+  "outputDirectory": "dist/web",
+  "rewrites": [
+    { "source": "/", "destination": "/binder/index.html" },
+    { "source": "/world", "destination": "/world/index.html" }
+  ],
+  "headers": [
+    { "source": "/assets/(.*)", "headers": [{ "key": "cache-control", "value": "public, max-age=31536000, immutable" }] },
+    { "source": "/catalogue.json", "headers": [{ "key": "cache-control", "value": "no-cache" }] }
+  ]
+}

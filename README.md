@@ -20,9 +20,17 @@ Placeholder art in `design/placeholder-art/` is a generated pattern, not album c
 npm install
 npm run dev      # build, watch albums/, packs/, config/ and the Logseq pages, serve on http://127.0.0.1:5180
 npm run build    # one build into dist/
+npm run export   # build, then write site/: the public snapshot the live site serves (commit it)
 npm run check    # validate every album and pack file
 npm test         # Logseq parser and search grammar
 ```
+
+## The live site
+
+Vercel serves a static copy: `vercel.json` runs `npm run build:site` (Vite, then `site/` copied in) and serves `dist/web`.
+Vercel can't read the Logseq graph, so `npm run export` on this Mac writes `site/`: the catalogue without warnings, the
+WebP art, and Apple preview URLs that stream from Apple. The full songs in `sounds/` stay local; online, every scene plays
+its generative loop. Run `npm run export` and commit `site/` before pushing album changes.
 
 `npm run build -- --root examples` builds the five example albums as a fixture. `web/card-test/` is a dev-only
 harness that renders the card component with the reference data, for pixel-diffing against `design/card-reference.html`.

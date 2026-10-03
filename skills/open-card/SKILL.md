@@ -9,4 +9,4 @@ description: Update an existing card in Vedant's catalogue, e.g. "move Kid A to 
 2. Change only what he asked. Appearance (kingdom, `also`, `track`, first date, pack) is edited in `albums/<id>.json`. Judgement (rating, rarity override, stats, review) lives in Logseq: tell him which property to change on which page; never edit it yourself.
 3. Threads: "X is also <kingdom>" adds to `also`; "X isn't <kingdom>" removes it. `also` never holds the album's own kingdom, so moving a card into a kingdom that is in its `also` swaps the two.
 4. Track: "X should play <song>" sets `track` to the song's name as it appears on the album; the build fetches its preview.
-5. Validate, run `npm run build`, show the result.
+5. Validate, run `npm run export` (it refreshes `site/`, the live site's snapshot; commit it with the change), show the result.

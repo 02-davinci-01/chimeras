@@ -10,4 +10,4 @@ description: Make Vedant's weekly album pack of 3 or 4 sealed, unheard albums. U
 3. Let him swap any. When he confirms, for each album: Spotify lookup as in add-album step 1, a provisional kingdom, `pack` set to the week, `first: null`, and `also` only where the genres clearly cross kingdoms.
 4. Write `packs/<week>.json` and the album files. Validate both schemas.
 5. Do not create Logseq pages unless he asks; offer once.
-6. Run `npm run build` and show the pack shelf.
+6. Run `npm run export` (the build, plus the public snapshot in `site/` that the live site serves; commit `site/` with the pack) and show the pack shelf.

@@ -1,4 +1,5 @@
-// Entry points: `build` (one build), `check` (validate album and pack files), `dev` (build, watch, serve, open).
+// Entry points: `build` (one build), `export` (build, then the public snapshot in site/), `check` (validate album and
+// pack files), `dev` (build, watch, serve, open).
 //   tsx build/index.ts build [--root examples]
 import path from 'node:path';
 import { Builder, BuildError } from './catalogue.ts';
@@ -21,13 +22,14 @@ async function main() {
     console.log(`ok: ${builder.albumIds().length} albums valid`);
     return;
   }
-  if (cmd === 'build') {
+  if (cmd === 'build' || cmd === 'export') {
     const t = performance.now();
     const { catalogue } = await builder.build();
     const counts = { open: 0, sealed: 0, unrated: 0 };
     for (const a of catalogue.albums) counts[a.state]++;
     console.log(`built ${catalogue.albums.length} albums (${counts.open} open, ${counts.sealed} sealed, ${counts.unrated} unrated) in ${((performance.now() - t) / 1000).toFixed(2)}s → ${path.relative(process.cwd(), path.join(root, 'dist')) || 'dist'}/`);
     report(catalogue.warnings);
+    if (cmd === 'export') await builder.exportSite(catalogue);
     return;
   }
   if (cmd === 'dev') {
@@ -35,7 +37,7 @@ async function main() {
     await dev(builder, { open: !rest.includes('--no-open') });
     return;
   }
-  throw new BuildError(`unknown command "${cmd}" (build, check, dev)`);
+  throw new BuildError(`unknown command "${cmd}" (build, export, check, dev)`);
 }
 
 main().catch(e => {

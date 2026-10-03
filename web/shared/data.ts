@@ -21,7 +21,8 @@ export const reviewText = (id: string) => searchText?.[id] ?? '';
 
 /** Call `fn` after every rebuild. */
 export function onRebuild(fn: () => void) {
-  if (!('EventSource' in window)) return;
+  // Only the local dev server rebuilds; a static host has no /events to listen to.
+  if (!import.meta.env.DEV || !('EventSource' in window)) return;
   const es = new EventSource('/events');
   es.addEventListener('build', () => { loadSearch(true); fn(); });
   es.addEventListener('build-error', e => console.warn('build failed:', JSON.parse((e as MessageEvent).data).message));

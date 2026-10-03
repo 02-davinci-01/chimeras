@@ -16,7 +16,7 @@ Goal: one new or updated `albums/<id>.json`, a successful build, and the finishe
    - Track: if he names one, use it. Otherwise pick the album's signature track yourself and say which in the same line, as provisional; he may swap it. The world plays a 30-second preview of it when you meet the card. Skip it for sealed albums until they open.
 4. Read the Logseq page (see SPEC.md section 6.2). Report what you found in one line: rating, rarity it maps to, the four stats. If the page or a property is missing, say which, and offer to scaffold the page with empty properties (`rating::`, `replay::`, `sonic::`, `meaning::`, `influence::`). Never write review text and never change an existing value.
 5. Write `albums/<id>.json` (slug from the title; never rename an existing id). Validate against `schema/album.schema.json`.
-6. Run `npm run build`. Fix anything it reports about this album. A "no preview for track" warning means Apple has no clip under that name: try the exact name from the album's tracklist, or tell him the card will play the kingdom's loop instead.
+6. Run `npm run export` (the build, plus the public snapshot in `site/` that the live site serves; commit `site/` with the album). Fix anything it reports about this album. A "no preview for track" warning means Apple has no clip under that name: try the exact name from the album's tracklist, or tell him the card will play the kingdom's loop instead.
 7. Show the card: a screenshot of the binder's enlarged view for this album, or the path to open.
 
 Opening a sealed album uses the same steps: keep its `pack`, set `first` (default today), and confirm the rating now exists on the page.

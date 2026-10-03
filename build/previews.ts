@@ -61,6 +61,18 @@ export class Previews {
     catch { return null; }
   }
 
+  /** Apple's own URL for the album's clip, looked up if this track has none cached. The public site streams from it. */
+  async remote(a: AlbumFile): Promise<PreviewResult | null> {
+    if (!a.track) return null;
+    const hit = this.cache[a.id];
+    if (hit?.want === a.track && hit.url) return { name: hit.name, no: hit.no, file: hit.url };
+    try {
+      const t = await this.find(a);
+      this.cache[a.id] = { want: a.track, name: t.trackName!, no: t.trackNumber ?? null, url: t.previewUrl! };
+      return { name: t.trackName!, no: t.trackNumber ?? null, file: t.previewUrl! };
+    } catch { return { name: a.track, no: null, file: null }; }
+  }
+
   /** Drop the clips and cache entries of albums that are gone. */
   prune(ids: Set<string>) {
     for (const f of fs.readdirSync(this.dir)) {

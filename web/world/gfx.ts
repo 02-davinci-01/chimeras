@@ -61,7 +61,9 @@ export class Layers {
   fit(cam: THREE.PerspectiveCamera) {
     const px = Math.min(devicePixelRatio || 1, 2);
     this.renderer.setPixelRatio(px);
-    this.renderer.setSize(innerWidth, innerHeight, false);
+    // Size the canvas's box too: CSS 100vh is the phone's tallest viewport (toolbar hidden), so a canvas left to it is
+    // stretched past innerHeight and every tap lands off the card it was aimed at.
+    this.renderer.setSize(innerWidth, innerHeight);
     this.target.setSize(Math.ceil(innerWidth / 2), Math.ceil(innerHeight / 2));
     cam.aspect = innerWidth / innerHeight;
     cam.updateProjectionMatrix();

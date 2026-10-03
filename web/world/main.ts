@@ -397,7 +397,9 @@ function nextMatch() {
 }
 
 /* ── pointer ── */
-const pointer = { x: 0, y: 0, inside: false, down: null as null | { x: number; y: number; moved: number } };
+const pointer = { x: 0, y: 0, inside: false, touch: false, down: null as null | { x: number; y: number; moved: number } };
+/** How far a press may wander and still be a tap: a fingertip shakes more than a mouse. */
+const TAP = () => pointer.touch ? 12 : 4;
 const ray = new THREE.Raycaster();
 const ndc = new THREE.Vector2();
 let hoverNebula: Nebula | null = null, hoverCard: Card | null = null;
@@ -415,7 +417,7 @@ function pick(t: number) {
       const hit = ray.ray.intersectSphere(sphere, lv);
       if (hit) { const d = hit.distanceTo(ray.ray.origin); if (d < best) { best = d; hoverNebula = nb; } }
     }
-  } else hoverCard = field.pick(pointer.x, pointer.y, camera, t, shownFor);
+  } else hoverCard = field.pick(pointer.x, pointer.y, camera, t, shownFor, pointer.touch ? 28 : 0);
 }
 canvas.addEventListener('pointermove', e => {
   pointer.x = e.clientX; pointer.y = e.clientY; pointer.inside = true;
@@ -423,20 +425,21 @@ canvas.addEventListener('pointermove', e => {
   if (d) {
     const dx = e.clientX - d.x, dy = e.clientY - d.y;
     d.moved += Math.abs(dx) + Math.abs(dy); d.x = e.clientX; d.y = e.clientY;
-    if (d.moved > 4 && touches.size < 2) { rig.drag(dx, dy); canvas.classList.toggle('grabbing', rig.mode === 'kingdom'); }
+    if (d.moved > TAP() && touches.size < 2) { rig.drag(dx, dy); canvas.classList.toggle('grabbing', rig.mode === 'kingdom'); }
   }
 });
 canvas.addEventListener('pointerleave', () => { pointer.inside = false; });
 canvas.addEventListener('pointerdown', e => {
   // A tap may come with no move before it (touch), so take the position here too.
-  pointer.x = e.clientX; pointer.y = e.clientY; pointer.inside = true;
+  pointer.x = e.clientX; pointer.y = e.clientY; pointer.inside = true; pointer.touch = e.pointerType !== 'mouse';
   pointer.down = { x: e.clientX, y: e.clientY, moved: 0 };
   canvas.setPointerCapture(e.pointerId);
 });
 canvas.addEventListener('pointerup', () => {
   const d = pointer.down; pointer.down = null;
   canvas.classList.remove('grabbing');
-  if (!d || d.moved > 4 || bootOn) return;
+  // A tap while the camera is still flying in isn't a miss: ignore it rather than back out to open space.
+  if (!d || d.moved > TAP() || bootOn || rig.flying) return;
   pick(rig.time);
   if (rig.mode === 'space') { if (hoverNebula) toKingdom(hoverNebula); return; }
   if (hoverCard) meet(hoverCard);

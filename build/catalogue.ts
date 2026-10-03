@@ -230,25 +230,44 @@ export class Builder {
 
   /**
    * The public snapshot in site/, committed so a host can serve it without the Logseq graph: the catalogue, the art,
-   * and an empty search index. Previews stream from Apple. The songs in sounds/ stay local (they're whole commercial
-   * tracks), so every scene plays its generative loop. Build warnings stay local too.
+   * the songs and an empty search index. Songs in sounds/ (each scene's, and any album's own track) are copied under
+   * plain names (space.mp3, kid-a.mp3) so their URLs need no escaping; other albums stream Apple's preview. Build
+   * warnings stay local.
    */
   async exportSite(cat: Catalogue) {
     const site = path.join(this.root, 'site');
     fs.rmSync(site, { recursive: true, force: true });
     fs.mkdirSync(path.join(site, 'art'), { recursive: true });
+    fs.mkdirSync(path.join(site, 'sounds'), { recursive: true });
+    // One copy per song, named for the first scene or album to use it, so a shared song keeps one URL.
+    const copied = new Map<string, string>();
+    const song = (file: string, name: string) => {
+      let rel = copied.get(file);
+      if (!rel) {
+        rel = `sounds/${name}${path.extname(file).toLowerCase()}`;
+        fs.copyFileSync(path.join(this.root, 'sounds', file), path.join(site, rel));
+        copied.set(file, rel);
+      }
+      return rel;
+    };
+    const sounds: Catalogue['sounds'] = {};
+    for (const [key, s] of Object.entries(this.songs) as [SceneKey, SongConfig][]) {
+      if (cat.sounds[key]) sounds[key] = { ...cat.sounds[key]!, url: song(s.file, key) };
+    }
     const albums = await Promise.all(cat.albums.map(async a => {
       const src = this.albums.get(a.id)!;
       for (const f of [a.art.cover, a.art.pixel, a.art.abstract]) if (f) fs.copyFileSync(path.join(this.root, f), path.join(site, f));
+      const own = src.track ? this.previews.local(src.track) : null;
+      if (own && a.track) return { ...a, track: { ...a.track, preview: song(own, a.id) } };
       const pv = await this.previews.remote(src);
       return { ...a, track: pv ? { name: pv.name, no: pv.no, preview: pv.file } : null };
     }));
     this.previews.save();
-    const out: Catalogue = { ...cat, sounds: {}, albums, warnings: [] };
+    const out: Catalogue = { ...cat, sounds, albums, warnings: [] };
     fs.writeFileSync(path.join(site, 'catalogue.json'), JSON.stringify(out) + '\n');
     fs.writeFileSync(path.join(site, 'search.json'), '{}\n');
     const missing = albums.filter(a => a.track && !a.track.preview).map(a => a.id);
-    this.log(`site/: ${albums.length} albums${missing.length ? ` (no Apple preview: ${missing.join(', ')})` : ''}`);
+    this.log(`site/: ${albums.length} albums, ${copied.size} songs${missing.length ? ` (no Apple preview: ${missing.join(', ')})` : ''}`);
   }
 
   /** The whole pipeline. */

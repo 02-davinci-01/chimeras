@@ -29,8 +29,8 @@ npm test         # Logseq parser and search grammar
 
 Vercel serves a static copy: `vercel.json` runs `npm run build:site` (Vite, then `site/` copied in) and serves `dist/web`.
 Vercel can't read the Logseq graph, so `npm run export` on this Mac writes `site/`: the catalogue without warnings, the
-WebP art, and Apple preview URLs that stream from Apple. The full songs in `sounds/` stay local; online, every scene plays
-its generative loop. Run `npm run export` and commit `site/` before pushing album changes.
+WebP art, the songs from `sounds/` (copied to `site/sounds/` as `space.mp3`, `rock.mp3`, … and `<album-id>.mp3`), and
+Apple preview URLs for every other album's track. Run `npm run export` and commit `site/` before pushing album changes.
 
 `npm run build -- --root examples` builds the five example albums as a fixture. `web/card-test/` is a dev-only
 harness that renders the card component with the reference data, for pixel-diffing against `design/card-reference.html`.

@@ -338,20 +338,25 @@ export class CardField {
     this.state.needsUpdate = true;
   }
 
-  /** The card under a screen point: project each centre and test its on-screen rectangle. */
+  /**
+   * The card under a screen point: project each centre and test its on-screen rectangle. With `slop` (a finger), a
+   * point just outside every card takes the nearest one within that many px.
+   */
   private v = new THREE.Vector3();
-  pick(x: number, y: number, cam: THREE.PerspectiveCamera, t: number, skip?: Card | null): Card | null {
-    let best: Card | null = null, bestZ = Infinity;
+  pick(x: number, y: number, cam: THREE.PerspectiveCamera, t: number, skip?: Card | null, slop = 0): Card | null {
+    let best: Card | null = null, bestZ = Infinity, near: Card | null = null, nearD = slop;
     const f = 1 / Math.tan((cam.fov * Math.PI) / 360);
     for (const c of this.cards) {
       if (c === skip || c.opacity < 0.5) continue;
       cardPos(c, t, this.v).applyMatrix4(cam.matrixWorldInverse);
       const z = -this.v.z;
-      if (z < 0.5 || z > bestZ) continue;
+      if (z < 0.5) continue;
       const sx = (this.v.x * f / cam.aspect / z * 0.5 + 0.5) * innerWidth, sy = (0.5 - this.v.y * f / z * 0.5) * innerHeight;
       const hh = (CARD_H / 2) * f / z * innerHeight / 2 * 1.08, hw = hh * CARD_W / CARD_H;
-      if (Math.abs(x - sx) < hw && Math.abs(y - sy) < hh) { best = c; bestZ = z; }
+      const d = Math.hypot(Math.max(0, Math.abs(x - sx) - hw), Math.max(0, Math.abs(y - sy) - hh));
+      if (d === 0) { if (z < bestZ) { best = c; bestZ = z; } }
+      else if (d < nearD) { near = c; nearD = d; }
     }
-    return best;
+    return best ?? near;
   }
 }

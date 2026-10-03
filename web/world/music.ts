@@ -320,7 +320,8 @@ export class Music {
   setSongs(songs: Partial<Record<SceneKey, SongOut>>) {
     const was = this.songs;
     this.songs = songs;
-    for (const s of Object.values(songs)) this.stream(`/${s.url}`);
+    // Only the scene you're in buffers now; the rest wait until you head their way (whole songs are heavy on a phone).
+    for (const [k, s] of Object.entries(songs)) this.stream(`/${s.url}`, k === this.scene);
     if (!this.ctx) return;
     for (const r of [...this.running]) if (r.key === this.scene && was[r.key]?.url !== songs[r.key]?.url) { this.stop(r, 1.2); this.start(r.key); }
     this.emit();
@@ -468,16 +469,16 @@ export class Music {
     });
   }
 
-  private stream(url: string): Stream {
+  private stream(url: string, eager = true): Stream {
     let s = this.streams.get(url);
     if (!s) {
       const el = new Audio();
       // Anonymous CORS, so Apple's previews can feed the Web Audio graph (the level meter) on the public site.
       el.crossOrigin = 'anonymous';
-      el.preload = 'auto'; el.src = url;
+      el.preload = eager ? 'auto' : 'metadata'; el.src = url;
       s = { el, gain: null, off: 0 };
       this.streams.set(url, s);
-    }
+    } else if (eager) s.el.preload = 'auto';
     return s;
   }
   /** Bring a stream up to `level` into `dest`. */

@@ -1,11 +1,12 @@
 // The build pipeline (SPEC 6.1): load + validate → read Logseq → covers → art → derive → write.
+import { execFileSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import { Ajv2020 } from 'ajv/dist/2020.js';
 import addFormats from 'ajv-formats';
 import { ArtBaker, writeAtomicSync, type ArtResult } from './art/bake.ts';
 import { graphReader, type GraphReader } from './logseq/graph.ts';
-import { Previews } from './previews.ts';
+import { norm, Previews } from './previews.ts';
 import {
   STAT_KEYS,
   type AlbumFile, type AlbumOut, type AppConfig, type Catalogue, type Kingdom,
@@ -230,9 +231,9 @@ export class Builder {
 
   /**
    * The public snapshot in site/, committed so a host can serve it without the Logseq graph: the catalogue, the art,
-   * the songs and an empty search index. Songs in sounds/ (each scene's, and any album's own track) are copied under
-   * plain names (space.mp3, kid-a.mp3) so their URLs need no escaping; other albums stream Apple's preview. Build
-   * warnings stay local.
+   * the songs and an empty search index. Songs in sounds/ (each scene's, and any album's own track) are shrunk to
+   * 64 kbps HE-AAC under plain names (space.m4a, yeezus.m4a) so their URLs need no escaping; other albums stream
+   * Apple's preview. Build warnings stay local.
    */
   async exportSite(cat: Catalogue) {
     const site = path.join(this.root, 'site');
@@ -244,8 +245,8 @@ export class Builder {
     const song = (file: string, name: string) => {
       let rel = copied.get(file);
       if (!rel) {
-        rel = `sounds/${name}${path.extname(file).toLowerCase()}`;
-        fs.copyFileSync(path.join(this.root, 'sounds', file), path.join(site, rel));
+        rel = `sounds/${name}.m4a`;
+        fs.copyFileSync(this.webSong(file), path.join(site, rel));
         copied.set(file, rel);
       }
       return rel;
@@ -268,6 +269,24 @@ export class Builder {
     fs.writeFileSync(path.join(site, 'search.json'), '{}\n');
     const missing = albums.filter(a => a.track && !a.track.preview).map(a => a.id);
     this.log(`site/: ${albums.length} albums, ${copied.size} songs${missing.length ? ` (no Apple preview: ${missing.join(', ')})` : ''}`);
+  }
+
+  /**
+   * A song from sounds/ as 64 kbps HE-AAC: about half a 128k MP3, and every browser plays it. Encoded with macOS's
+   * afconvert once per version of the file, cached in sounds/.web/.
+   */
+  private webSong(file: string) {
+    const src = path.join(this.root, 'sounds', file), st = fs.statSync(src);
+    const dir = path.join(this.root, 'sounds', '.web');
+    const out = path.join(dir, `${norm(file).replace(/ /g, '-')}-${st.size}-${Math.round(st.mtimeMs)}.m4a`);
+    if (fs.existsSync(out)) return out;
+    fs.mkdirSync(dir, { recursive: true });
+    for (const f of fs.readdirSync(dir)) if (f.startsWith(`${norm(file).replace(/ /g, '-')}-`)) fs.rmSync(path.join(dir, f));
+    try { execFileSync('afconvert', ['-f', 'm4af', '-d', 'aach', '-b', '64000', '-q', '127', src, out + '.tmp'], { stdio: 'pipe' }); }
+    catch (e) { throw new BuildError(`sounds: couldn't encode "${file}" (afconvert: ${(e as Error).message.split('\n')[0]})`); }
+    fs.renameSync(out + '.tmp', out);
+    this.log(`  song   ${file} · ${(st.size / 1e6).toFixed(1)} → ${(fs.statSync(out).size / 1e6).toFixed(1)} MB`);
+    return out;
   }
 
   /** The whole pipeline. */

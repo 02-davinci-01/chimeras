@@ -96,8 +96,9 @@ export class Reader {
       ...STAT_KEYS.map(s => a.stats[s] != null ? `${s[0].toUpperCase() + s.slice(1)} ${a.stats[s]}` : null),
       a.first ? `first ${penDate(a.first)}` : null,
     ].filter(Boolean);
-    return `<header class="reader-head"><button class="reader-x" type="button" data-close aria-label="Close the review">×</button>`
-      + `<h2>${esc(a.title)}</h2><p class="reader-artist">${esc(a.artist)}</p><p class="reader-line">${bits.map(b => esc(b!)).join('<span aria-hidden="true"> · </span>')}</p></header>`;
+    const k = cat.kingdoms.find(k => k.key === a.kingdom);
+    return `<header class="reader-head"><button class="reader-x" type="button" data-close aria-label="Close the review">esc ×</button>`
+      + `<p class="reader-kicker">review · № ${a.no} · ${esc(k?.name ?? '')}</p><h2>${esc(a.title)}</h2><p class="reader-artist">${esc(a.artist)}</p><p class="reader-line">${bits.map(b => esc(b!)).join('<span aria-hidden="true"> · </span>')}</p></header>`;
   }
 
   private footer(a: AlbumOut) {

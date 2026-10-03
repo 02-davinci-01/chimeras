@@ -14,6 +14,25 @@ const SCREWS = ['tl', 'tr', 'bl', 'br'].map(SCREW).join('');
 const RIDGE = '<div class="ridge"><svg viewBox="0 0 188 20" preserveAspectRatio="none" aria-hidden="true"><path d="M14 20 L24 2 H164 L174 20" fill="none" stroke="#E0E0DC"/><circle cx="52" cy="12" r="3.5" fill="none" stroke="#D9D9D5"/><circle cx="136" cy="12" r="3.5" fill="none" stroke="#D9D9D5"/><rect x="84" y="8" width="7" height="7" fill="none" stroke="#D9D9D5"/><rect x="97" y="8" width="7" height="7" fill="none" stroke="#D9D9D5"/></svg></div>';
 const LINK = '<button class="review-link" type="button" data-action="read">Read the full review</button>';
 
+/** Hover explanations (data-tip) for the card's small marks. */
+const TIER_NOTES: Record<string, string> = {
+  divine: 'A perfect 10. A pearly sheen sweeps the card.',
+  rare: 'Rated 9 or more. Holographic border.',
+  elite: 'Rated 8 or more. Etched border.',
+  special: 'Rated 7 or more. Foil title on the strip.',
+  common: 'Rated below 7. Matte, no finish.',
+};
+const STAT_NOTES: Record<string, string> = {
+  replay: 'how often it pulls you back',
+  sonic: 'how it sounds: production, texture, space',
+  meaning: 'what it says, and what it meant to you',
+  influence: 'how far its echo carries',
+};
+const MARK_NOTES: Record<string, string> = { smear: 'smeared and warped', grid: 'cut into a slipping grid', halftone: 'printed as halftone dots', strings: 'strung as threads' };
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const longDate = (iso: string) => `${Number(iso.slice(8, 10))} ${MONTHS[Number(iso.slice(5, 7)) - 1]} ${iso.slice(0, 4)}`;
+const tip = (title: string, body = '') => ` data-tip="${esc(title)}"${body ? ` data-tip-body="${esc(body)}"` : ''}`;
+
 /** DD.MM.YY, as hand-written on the strip. */
 export const penDate = (iso: string | null) => iso ? `${iso.slice(8, 10)}.${iso.slice(5, 7)}.${iso.slice(2, 4)}` : '';
 export const weekNo = (week: string) => String(Number(week.slice(-2)));
@@ -27,8 +46,8 @@ export interface CardContext {
 /** Long titles wrap early (and very long ones shrink) so the date keeps its room. Reference titles are all short. */
 const titleClass = (t: string) => t.length > 22 ? 'obi-title longer' : t.length > 11 ? 'obi-title long' : 'obi-title';
 
-function obi(title: string, date: string, foot: string) {
-  return `<div class="obi"><div class="${titleClass(title)}">${esc(title)}</div><div class="obi-date">${esc(date)}</div><div class="obi-foot"><span>${esc(foot)}</span>${BARCODE}</div></div>`;
+function obi(title: string, date: string, foot: string, dateTip = '', footTip = '') {
+  return `<div class="obi"><div class="${titleClass(title)}">${esc(title)}</div><div class="obi-date"${dateTip}>${esc(date)}</div><div class="obi-foot"${footTip}><span>${esc(foot)}</span>${BARCODE}</div></div>`;
 }
 
 function stars(n: number | null, starPath: string, viewBox: string) {
@@ -51,21 +70,25 @@ export function faceHTML(a: AlbumOut, face: Face, ctx: CardContext): string {
       + `<div><div class="artist">Week ${wk} pack</div><div class="meta">Card ${n} of ${of}</div></div>${RIDGE}</div>`;
   }
 
-  const strip = obi(a.title, penDate(a.first), `${k.name} ${a.no}`);
+  const strip = obi(a.title, penDate(a.first), `${k.name} ${a.no}`,
+    a.first ? tip('First listened', longDate(a.first)) : '',
+    tip(`${k.name} · card ${a.no}`, `Card ${Number(a.no)} of ${cat.albums.length || '?'} in the catalogue.`));
   if (face === 'back') {
     const img = a.art.abstract ? `<img src="${base}/${a.art.abstract}" alt="Abstract art of ${esc(a.title)}">` : '';
     const text = a.excerpt ? esc(a.excerpt) : 'Nothing written yet. The review lives on the Logseq page.';
     return strip
-      + `\n<div class="body">${SCREWS}<div class="art${img ? '' : ' blank'}">${img}<div class="side">B</div></div>\n`
+      + `\n<div class="body">${SCREWS}<div class="art${img ? '' : ' blank'}">${img}<div class="side"${tip('Side B · abstract', `The cover's own colours, ${MARK_NOTES[k.mark] ?? 'redrawn'}: the ${k.name.toLowerCase()} mark.`)}>B</div></div>\n`
       + `<p class="excerpt${a.excerpt ? '' : ' empty'}" style="margin:2px 0 0">${text}</p>\n${LINK}${RIDGE}</div>`;
   }
 
   const tier = cat.rarity.find(t => t.key === a.rarity);
-  const badge = tier ? `<div class="rarity-badge"><svg class="sym" width="15" height="15" viewBox="-1 -1 26 26" aria-label="${tier.name}"><path d="${tier.symbol}"/></svg></div>` : '';
-  const img = a.art.pixel ? `<img src="${base}/${a.art.pixel}" alt="Pixel cover art of ${esc(a.title)}">` : '';
-  const statRows = STAT_KEYS.map(s => `<div class="stat"><span>${s[0].toUpperCase() + s.slice(1)}</span><div class="stars">${stars(a.stats[s], cat.starPath, cat.starViewBox)}</div></div>`).join('');
+  const tierTip = tier ? tip(`${tier.name}${a.rating != null ? ` · ${a.rating}/10` : ''}`, `${TIER_NOTES[tier.key] ?? ''}${a.rating != null && a.rarity && tier.rule.minRating > a.rating ? ' Set by hand on the Logseq page.' : ''}`) : '';
+  const badge = tier ? `<div class="rarity-badge"${tierTip}><svg class="sym" width="15" height="15" viewBox="-1 -1 26 26" aria-label="${tier.name}"><path d="${tier.symbol}"/></svg></div>` : '';
+  const front = a.art.cover ?? a.art.pixel;
+  const img = front ? `<img${a.art.cover ? ' class="cover"' : ''} src="${base}/${front}" alt="Cover of ${esc(a.title)}">` : '';
+  const statRows = STAT_KEYS.map(s => `<div class="stat"${tip(`${s[0].toUpperCase() + s.slice(1)}${a.stats[s] != null ? ` · ${a.stats[s]} of 5` : ''}`, STAT_NOTES[s][0].toUpperCase() + STAT_NOTES[s].slice(1) + '.')}><span>${s[0].toUpperCase() + s.slice(1)}</span><div class="stars">${stars(a.stats[s], cat.starPath, cat.starViewBox)}</div></div>`).join('');
   return strip
-    + `\n<div class="body">${SCREWS}<div class="art${img ? '' : ' blank'}">${img}<div class="side">A</div>${badge}</div>\n`
+    + `\n<div class="body">${SCREWS}<div class="art${img ? '' : ' blank'}">${img}<div class="side"${tip('Side A · the cover')}>A</div>${badge}</div>\n`
     + `<div><div class="artist">${esc(a.artist)}</div><div class="meta"><b>${tier ? tier.name : 'Unrated'}</b>  ${a.year}, No.${a.no}</div></div>\n`
     + `<div class="stats">${statRows}</div>${LINK}${RIDGE}</div>`;
 }

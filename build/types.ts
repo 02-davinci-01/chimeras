@@ -117,7 +117,7 @@ export interface AlbumOut {
   rating: number | null;
   rarity: string | null;
   stats: Record<StatKey, number | null>;
-  art: { pixel: string | null; abstract: string | null; palette: string[] };
+  art: { cover: string | null; pixel: string | null; abstract: string | null; palette: string[] };
   excerpt: string;
   logseq: { page: string; url: string };
   person: PersonOut;

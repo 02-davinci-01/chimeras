@@ -27,3 +27,7 @@
 @keyframes pen-write{from{clip-path:inset(0 0 100% 0)}to{clip-path:inset(0 0 0 0)}}
 .card.writing .obi-date{animation:pen-write .6s cubic-bezier(.5,0,.3,1) both}
 @media (prefers-reduced-motion:reduce){.card.writing .obi-date{animation:none}.flipper{transition:none}}
+
+/* The front shows the real cover (crisp at 2×); the abstract stays on the back. */
+.art img.cover{image-rendering:auto;object-fit:cover}
+.card [data-tip]{cursor:help}

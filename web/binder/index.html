@@ -4,37 +4,82 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Catalogue</title>
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='3' y='1' width='26' height='30' rx='3' fill='%23fff' stroke='%23161616' stroke-width='2'/%3E%3Crect x='3' y='1' width='8' height='30' rx='2' fill='%23C62F2B'/%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='3' y='1' width='26' height='30' rx='3' fill='%23fff' stroke='%23121214' stroke-width='2'/%3E%3Crect x='3' y='1' width='8' height='30' rx='2' fill='%23121214'/%3E%3C/svg%3E">
 </head>
 <body>
-<header class="top">
-  <div class="brand">
-    <h1 class="wordmark">Catalogue</h1>
-    <p class="count" id="count">&nbsp;</p>
+
+<aside class="rail-fixed" aria-hidden="true"><span class="rail-dot"></span><span class="rail-text">a record of listening</span><span class="rail-line"></span><span class="rail-text faint" id="rail-count">—</span></aside>
+<div class="corner mono" aria-hidden="true" id="roman">—</div>
+
+<header class="masthead">
+  <div class="mast-copy">
+    <p class="label ink" style="--d:0">every album i've loved, kept like this :)</p>
+    <h1 class="title ink" style="--d:1">catalogue<span class="caret" aria-hidden="true">_</span></h1>
+    <p class="whisper ink" style="--d:2">“Every album a card. Every card a person, somewhere out in the dark.”</p>
+    <dl class="mast-meta ink" style="--d:3" id="meta"></dl>
   </div>
-  <div class="search">
-    <svg class="search-icon" viewBox="0 0 16 16" aria-hidden="true"><circle cx="7" cy="7" r="5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M11 11 L14.5 14.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-    <input id="q" type="search" placeholder="Search albums, artists, reviews" autocomplete="off" spellcheck="false" aria-label="Search the catalogue">
-    <kbd class="slash" aria-hidden="true">/</kbd>
-  </div>
+  <div class="mast-hand ink" style="--d:2" id="hand" aria-label="Most recently heard"></div>
 </header>
-<nav class="bar" aria-label="Filters">
-  <div class="chips" id="chips" role="group" aria-label="Kingdoms"></div>
-  <div class="bar-right">
-    <label class="toggle"><input type="checkbox" id="hide"> <span>Hide non-matching</span></label>
-    <label class="sort"><span>Sort</span><select id="sort"></select></label>
-    <a class="world-link" id="world" href="/world">See in world <span aria-hidden="true">→</span></a>
+
+<section class="spectrum ink" style="--d:4" aria-label="Kingdoms">
+  <div class="spectrum-bar" id="spectrum-bar"></div>
+  <div class="spectrum-legend" id="spectrum-legend"></div>
+</section>
+
+<section class="sheet binder ink" style="--d:5" aria-label="The binder">
+  <div class="title-card">
+    <span class="tc-layer mono">Index:01</span>
+    <span class="tc-word">The binder</span>
+    <span class="tc-note mono" id="tc-note"></span>
   </div>
-</nav>
-<section class="shelf" id="shelf" hidden aria-label="Sealed packs"></section>
-<main class="grid" id="grid" aria-label="Cards"></main>
-<p class="no-match" id="empty" hidden>No cards match <span id="empty-q"></span>.</p>
-<div class="stage" id="stage" hidden>
+
+  <div class="controls">
+    <div class="seg kingdoms" id="kingdoms" role="radiogroup" aria-label="Kingdom"></div>
+    <div class="search ticks">
+      <span class="label search-label">find</span>
+      <input id="q" type="search" placeholder="title, artist, review, or k:rock r>=rare year:1990s" autocomplete="off" spellcheck="false" aria-label="Search the catalogue">
+      <span class="search-count mono" id="search-count"></span>
+      <kbd class="slash" aria-hidden="true">/</kbd>
+    </div>
+    <div class="control-row">
+      <label class="sort"><span class="label">sort</span><select id="sort"></select></label>
+      <label class="switch"><input type="checkbox" id="hide"><span class="switch-track" aria-hidden="true"></span><span class="label">hide non-matching</span></label>
+    </div>
+  </div>
+
+  <section class="shelf" id="shelf" hidden aria-label="Sealed packs"></section>
+
+  <div class="grid-wrap">
+    <main class="grid" id="grid" aria-label="Cards"></main>
+    <p class="no-match" id="empty" hidden><span class="label">nothing here</span><br>No card matches <span id="empty-q"></span>.</p>
+  </div>
+
+  <aside class="rail" aria-hidden="true"><span class="rail-dot"></span><span class="rail-text">every album is a person</span></aside>
+
+  <footer class="title-block mono">
+    <div><span>index</span><b>01 of 02</b></div>
+    <div><span>title</span><b>Binder</b></div>
+    <div><span>showing</span><b id="tb-showing">—</b></div>
+    <div><span>sorted by</span><b id="tb-sort">—</b></div>
+    <div><span>drawn by</span><b>02-davinci-01</b></div>
+  </footer>
+</section>
+
+<footer class="foot">
+  <a class="to-world" id="world" href="/world"><span class="label">index:02</span><span class="to-world-word">Close the binder, open the world</span><span class="arrow" aria-hidden="true">→</span></a>
+  <p class="mono foot-note">rev A · Oct 2026 · logseq is the source of truth for words</p>
+</footer>
+
+<nav class="dock mono" aria-label="Views"><a href="/" aria-current="page">binder</a><a href="/world" id="dock-world">world</a></nav>
+
+<div class="plate" id="stage" hidden>
   <div class="scrim" data-close></div>
   <div class="halo" aria-hidden="true"></div>
   <div class="holder" id="holder"></div>
-  <p class="hint" aria-hidden="true"><kbd>F</kbd> flip · <kbd>R</kbd> read · <kbd>←</kbd><kbd>→</kbd> next · <kbd>Esc</kbd> close</p>
+  <aside class="plate-info" id="plate-info" aria-live="polite"></aside>
+  <button class="plate-x mono" type="button" data-close aria-label="Close">esc ×</button>
 </div>
+
 <script type="module" src="/binder/main.ts"></script>
 </body>
 </html>

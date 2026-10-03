@@ -11,7 +11,7 @@ const mk = (id: string, o: Partial<AlbumOut> & { s?: [number, number, number, nu
   kingdom: o.kingdom ?? 'rock', added: '2026-10-03', first: o.first ?? null, pack: o.pack ?? null, state: o.state ?? 'open',
   rating: o.rating ?? null, rarity: o.rarity ?? null,
   stats: { replay: o.s?.[0] ?? null, sonic: o.s?.[1] ?? null, meaning: o.s?.[2] ?? null, influence: o.s?.[3] ?? null },
-  art: { pixel: null, abstract: null, palette: [] }, excerpt: '', logseq: { page: id, url: '' }, person: {} as AlbumOut['person'],
+  art: { cover: null, pixel: null, abstract: null, palette: [] }, excerpt: '', logseq: { page: id, url: '' }, person: {} as AlbumOut['person'],
 });
 
 const albums = [

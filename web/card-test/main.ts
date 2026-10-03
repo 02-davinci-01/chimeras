@@ -17,7 +17,7 @@ const album = (o: Omit<Partial<AlbumOut>, 'art'> & { s?: number[]; img?: string 
   spotify: null, runtime: null, kingdom: o.kingdom ?? 'rock', added: '2026-10-02', first: o.first ?? null, pack: o.pack ?? null,
   state: o.state ?? 'open', rating: o.rating ?? null, rarity: o.rarity ?? null,
   stats: { replay: o.s?.[0] ?? null, sonic: o.s?.[1] ?? null, meaning: o.s?.[2] ?? null, influence: o.s?.[3] ?? null },
-  art: { pixel: o.img ? `placeholder-art/${o.img}` : null, abstract: o.img ? `placeholder-art/${o.img}` : null, palette: [] },
+  art: { cover: o.img ? `placeholder-art/${o.img}` : null, pixel: o.img ? `placeholder-art/${o.img}` : null, abstract: o.img ? `placeholder-art/${o.img}` : null, palette: [] },
   excerpt: o.excerpt ?? '', logseq: { page: '', url: '' }, person: {} as AlbumOut['person'],
 });
 

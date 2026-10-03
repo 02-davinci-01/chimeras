@@ -174,7 +174,7 @@ export class Builder {
         rarity = override && tiers.some(t => t.key === override) ? override : tiers.find(t => rating! >= t.rule.minRating)?.key ?? tiers[tiers.length - 1].key;
       }
 
-      const art = this.art.get(a.id) ?? { pixel: null, abstract: null, palette: [] };
+      const art = this.art.get(a.id) ?? { cover: null, pixel: null, abstract: null, palette: [] };
       if (!art.pixel) warn(a.id, a.cover ? 'cover art is missing (download failed?)' : 'no cover URL');
       if (page) search[a.id] = allText(page.blocks, resolve);
 
